@@ -875,6 +875,11 @@ var (
 		Value:    ethconfig.Defaults.GPO.IgnorePrice.Int64(),
 		Category: flags.GasPriceCategory,
 	}
+	GRPCEnabledFlag = &cli.BoolFlag{
+		Name:     "grpc",
+		Usage:    "Enable the GRPC server",
+		Category: flags.APICategory,
+	}
 
 	GrpcHostFlag = &cli.StringFlag{
 		Name:     "grpchost",
@@ -1459,16 +1464,11 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 	}
 }
 func setGRRPC(ctx *cli.Context, cfg *node.Config) {
-	if ctx.IsSet(GrpcHostFlag.Name) {
-		cfg.GRPCHost = ctx.String(GrpcHostFlag.Name)
-	} else {
+	cfg.GRPCHost = ctx.String(GrpcHostFlag.Name)
+	if ctx.Bool(GRPCEnabledFlag.Name) && cfg.GRPCHost == "" {
 		cfg.GRPCHost = "127.0.0.1"
 	}
-	if ctx.IsSet(GrpcPortFlag.Name) {
-		cfg.GRPCPort = ctx.Int(GrpcPortFlag.Name)
-	} else {
-		cfg.GRPCPort = 2323
-	}
+	cfg.GRPCPort = ctx.Int(GrpcPortFlag.Name)
 	return
 }
 

@@ -73,10 +73,13 @@ func StartNode(ctx *cli.Context, stack *node.Node, isConsole bool, backend ethap
 	if err := stack.Start(); err != nil {
 		Fatalf("Error starting protocol stack: %v", err)
 	}
-	err := stack.StartGRPC(backend)
-	if err != nil {
-		Fatalf("Error starting GRPC service:%+v", err)
+	if ctx.Bool(GRPCEnabledFlag.Name) {
+		err := stack.StartGRPC(backend)
+		if err != nil {
+			Fatalf("Error starting GRPC service:%+v", err)
+		}
 	}
+
 	go func() {
 		sigc := make(chan os.Signal, 1)
 		signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)

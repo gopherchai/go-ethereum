@@ -184,6 +184,7 @@ var (
 		utils.RPCGlobalEVMTimeoutFlag,
 		utils.RPCGlobalTxFeeCapFlag,
 		utils.AllowUnprotectedTxs,
+		utils.GRPCEnabledFlag,
 		utils.GrpcHostFlag,
 		utils.GrpcPortFlag,
 	}
