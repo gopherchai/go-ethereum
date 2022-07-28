@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	pb "github.com/ethereum/go-ethereum/grpc/proto/protoeth"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -17,7 +17,7 @@ var (
 func setup(t *testing.T) {
 	ctx := context.TODO()
 	conn, err := grpc.DialContext(ctx, "127.0.0.1:2323", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	require.Nil(t, err, "meet error")
+	assert.Nil(t, err, "meet error")
 
 	client = pb.NewBalanceClient(conn)
 }
@@ -27,7 +27,7 @@ func TestGrpc(t *testing.T) {
 	ctx := context.TODO()
 
 	reply1, err := client.GetBlockNumber(ctx, &pb.GetBlockNumberReq{})
-	require.Nil(t, err, "get GetBlockNumber error:%+v")
-	require.Greater(t, reply1.Number, 0)
+	assert.Nil(t, err, "GetBlockNumber error")
+	assert.Greater(t, reply1.Number, uint64(0))
 
 }

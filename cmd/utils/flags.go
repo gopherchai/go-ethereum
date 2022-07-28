@@ -1173,16 +1173,6 @@ func setHTTP(ctx *cli.Context, cfg *node.Config) {
 			cfg.HTTPHost = ctx.String(HTTPListenAddrFlag.Name)
 		}
 	}
-	if ctx.IsSet(GrpcHostFlag.Name) {
-		cfg.GRPCHost = ctx.String(GrpcHostFlag.Name)
-	} else {
-		cfg.GRPCHost = "127.0.0.1"
-	}
-	if ctx.IsSet(GrpcPortFlag.Name) {
-		cfg.GRPCPort = ctx.Int(GrpcPortFlag.Name)
-	} else {
-		cfg.GRPCPort = 2323
-	}
 
 	if ctx.IsSet(HTTPPortFlag.Name) {
 		cfg.HTTPPort = ctx.Int(HTTPPortFlag.Name)
@@ -1468,11 +1458,25 @@ func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
 		cfg.DiscoveryV5 = false
 	}
 }
+func setGRRPC(ctx *cli.Context, cfg *node.Config) {
+	if ctx.IsSet(GrpcHostFlag.Name) {
+		cfg.GRPCHost = ctx.String(GrpcHostFlag.Name)
+	} else {
+		cfg.GRPCHost = "127.0.0.1"
+	}
+	if ctx.IsSet(GrpcPortFlag.Name) {
+		cfg.GRPCPort = ctx.Int(GrpcPortFlag.Name)
+	} else {
+		cfg.GRPCPort = 2323
+	}
+	return
+}
 
 // SetNodeConfig applies node-related command line flags to the config.
 func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	SetP2PConfig(ctx, &cfg.P2P)
 	setIPC(ctx, cfg)
+	setGRRPC(ctx, cfg)
 	setHTTP(ctx, cfg)
 	setGraphQL(ctx, cfg)
 	setWS(ctx, cfg)
