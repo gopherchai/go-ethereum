@@ -184,6 +184,8 @@ var (
 		utils.RPCGlobalEVMTimeoutFlag,
 		utils.RPCGlobalTxFeeCapFlag,
 		utils.AllowUnprotectedTxs,
+		utils.GrpcHostFlag,
+		utils.GrpcPortFlag,
 	}
 
 	metricsFlags = []cli.Flag{
@@ -361,7 +363,7 @@ func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend, isCon
 	debug.Memsize.Add("node", stack)
 
 	// Start up the node itself
-	utils.StartNode(ctx, stack, isConsole)
+	utils.StartNode(ctx, stack, isConsole, backend)
 
 	// Unlock any account specifically requested
 	unlockAccounts(ctx, stack)

@@ -34,10 +34,12 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/prometheus/tsdb/fileutil"
+	"google.golang.org/grpc"
 )
 
 // Node is a container on which services can be registered.
@@ -63,6 +65,9 @@ type Node struct {
 	wsAuth        *httpServer //
 	ipc           *ipcServer  // Stores information about the ipc http server
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
+
+	//grpc Server
+	grpcServer *grpc.Server
 
 	databases map[*closeTrackingDB]struct{} // All open databases
 }
@@ -158,6 +163,8 @@ func New(conf *Config) (*Node, error) {
 	node.wsAuth = newHTTPServer(node.log, rpc.DefaultHTTPTimeouts)
 	node.ipc = newIPCServer(node.log, conf.IPCEndpoint())
 
+	node.grpcServer = grpc.NewServer()
+
 	return node, nil
 }
 
@@ -202,6 +209,10 @@ func (n *Node) Start() error {
 		n.doClose(nil)
 	}
 	return err
+}
+
+func (n *Node) CloseGrpc() {
+	n.grpcServer.GracefulStop()
 }
 
 // Close stops the Node and releases resources acquired in
@@ -375,6 +386,14 @@ func (n *Node) obtainJWTSecret(cliParam string) ([]byte, error) {
 	}
 	log.Info("Generated JWT secret", "path", fileName)
 	return jwtSecret, nil
+}
+
+//startGRPC to start grpc service
+func (n *Node) StartGRPC(backend ethapi.Backend) error {
+	addr := n.config.GRPCHost + ":" + fmt.Sprintf("%d", n.config.GRPCPort)
+
+	return Serve(n.grpcServer, addr, backend)
+
 }
 
 // startRPC is a helper method to configure all the various RPC endpoints during node

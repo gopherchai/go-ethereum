@@ -112,6 +112,11 @@ type Config struct {
 	// for ephemeral nodes).
 	HTTPPort int `toml:",omitempty"`
 
+	//GRPCHost is the host interface on which to start the GRPC server
+	GRPCHost string
+	//GRPCPort is the TCP port number on which to start the GRPC server.
+	GRPCPort int
+
 	// HTTPCors is the Cross-Origin Resource Sharing header to send to requesting
 	// clients. Please be aware that CORS is a browser enforced security, it's fully
 	// useless for custom HTTP clients.

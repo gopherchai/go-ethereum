@@ -38,6 +38,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/ethconfig"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/internal/debug"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -68,9 +69,13 @@ func Fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func StartNode(ctx *cli.Context, stack *node.Node, isConsole bool) {
+func StartNode(ctx *cli.Context, stack *node.Node, isConsole bool, backend ethapi.Backend) {
 	if err := stack.Start(); err != nil {
 		Fatalf("Error starting protocol stack: %v", err)
+	}
+	err := stack.StartGRPC(backend)
+	if err != nil {
+		Fatalf("Error starting GRPC service:%+v", err)
 	}
 	go func() {
 		sigc := make(chan os.Signal, 1)
@@ -90,6 +95,7 @@ func StartNode(ctx *cli.Context, stack *node.Node, isConsole bool) {
 		shutdown := func() {
 			log.Info("Got interrupt, shutting down...")
 			go stack.Close()
+			go stack.CloseGrpc()
 			for i := 10; i > 0; i-- {
 				<-sigc
 				if i > 1 {

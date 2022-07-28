@@ -876,6 +876,20 @@ var (
 		Category: flags.GasPriceCategory,
 	}
 
+	GrpcHostFlag = &cli.StringFlag{
+		Name:     "grpchost",
+		Usage:    "set grpc service port",
+		Value:    "127.0.0.1",
+		Category: flags.APICategory,
+	}
+
+	GrpcPortFlag = &cli.Int64Flag{
+		Name:     "grpcport",
+		Usage:    "set grpc service port",
+		Value:    2323,
+		Category: flags.APICategory,
+	}
+
 	// Metrics flags
 	MetricsEnabledFlag = &cli.BoolFlag{
 		Name:     "metrics",
@@ -1158,6 +1172,16 @@ func setHTTP(ctx *cli.Context, cfg *node.Config) {
 		if ctx.IsSet(HTTPListenAddrFlag.Name) {
 			cfg.HTTPHost = ctx.String(HTTPListenAddrFlag.Name)
 		}
+	}
+	if ctx.IsSet(GrpcHostFlag.Name) {
+		cfg.GRPCHost = ctx.String(GrpcHostFlag.Name)
+	} else {
+		cfg.GRPCHost = "127.0.0.1"
+	}
+	if ctx.IsSet(GrpcPortFlag.Name) {
+		cfg.GRPCPort = ctx.Int(GrpcPortFlag.Name)
+	} else {
+		cfg.GRPCPort = 2323
 	}
 
 	if ctx.IsSet(HTTPPortFlag.Name) {

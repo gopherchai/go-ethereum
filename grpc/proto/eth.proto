@@ -1,0 +1,24 @@
+syntax = "proto3";
+package protoeth;
+option go_package = "./protoeth";
+
+// import "google/protobuf/empty.proto";
+
+message HashStringOrNumber {
+  string hash = 1;
+  uint64 num = 2;
+}
+
+// curl -X POST -H "Content-Type: application/json" http://localhost:8545 --data
+// '{"jsonrpc": "2.0", "id": 42, "method": "eth_accounts", "params": []}'
+
+message GetBalanceReq { string address = 1; }
+
+message GetBalanceResp { string balance = 1; }
+
+message GetBlockNumberReq {}
+message GetBlockNumberResp { uint64 number = 1; }
+service balance {
+  rpc getBalance(GetBalanceReq) returns (GetBalanceResp);
+  rpc getBlockNumber(GetBlockNumberReq) returns (GetBlockNumberResp);
+}
