@@ -77,12 +77,10 @@ func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceR
 	return &protoeth.GetBalanceResp{
 		Balance: amount.ToInt().String(),
 	}, nil
-
 }
 
 func Serve(stack *node.Node, e *Ethereum, bkd ethapi.Backend) {
 	s := stack.GrpcServer()
 	protoeth.RegisterBalanceServer(s, NewGrpcService(stack, e, bkd))
 	return
-
 }

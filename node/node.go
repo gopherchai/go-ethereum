@@ -66,8 +66,7 @@ type Node struct {
 	ipc           *ipcServer  // Stores information about the ipc http server
 	inprocHandler *rpc.Server // In-process RPC request handler to process the API requests
 
-	//grpc Server
-	grpcServer *grpc.Server
+	grpcServer *grpc.Server // gRPC server
 
 	databases map[*closeTrackingDB]struct{} // All open databases
 }
@@ -392,16 +391,16 @@ func (n *Node) obtainJWTSecret(cliParam string) ([]byte, error) {
 	return jwtSecret, nil
 }
 
-//startGRPC to start grpc service
+// StartGRPC to start grpc service
 func (n *Node) StartGRPC() error {
 	addr := n.config.GRPCHost + ":" + fmt.Sprintf("%d", n.config.GRPCPort)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
+	log.Info("gRPC server started", "addr", addr)
 	go n.grpcServer.Serve(lis)
 	return err
-
 }
 
 // startRPC is a helper method to configure all the various RPC endpoints during node

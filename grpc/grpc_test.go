@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	pb "github.com/ethereum/go-ethereum/grpc/proto/protoeth"
@@ -21,13 +22,25 @@ func setup(t *testing.T) {
 
 	client = pb.NewBalanceClient(conn)
 }
-func TestGrpc(t *testing.T) {
 
+func TestGrpcGetBlockNumber(t *testing.T) {
 	setup(t)
 	ctx := context.TODO()
 
 	reply1, err := client.GetBlockNumber(ctx, &pb.GetBlockNumberReq{})
 	assert.Nil(t, err, "GetBlockNumber error:%+v", err)
 	assert.Greater(t, reply1.Number, uint64(99999))
+}
 
+func TestGrpcGetBalance(t *testing.T) {
+	setup(t)
+	ctx := context.TODO()
+
+	reply1, err := client.GetBalance(
+		ctx, &pb.GetBalanceReq{
+			Address: "0x0000000000000000000000000000000000123456",
+		},
+	)
+	assert.Nil(t, err, "GetBalance error:%+v", err)
+	fmt.Println(reply1.Balance)
 }
