@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -34,7 +35,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/event"
-	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -166,6 +166,10 @@ func New(conf *Config) (*Node, error) {
 	node.grpcServer = grpc.NewServer()
 
 	return node, nil
+}
+
+func (n *Node) GrpcServer() *grpc.Server {
+	return n.grpcServer
 }
 
 // Start starts all registered lifecycles, RPC services and p2p networking.
@@ -389,10 +393,14 @@ func (n *Node) obtainJWTSecret(cliParam string) ([]byte, error) {
 }
 
 //startGRPC to start grpc service
-func (n *Node) StartGRPC(backend ethapi.Backend) error {
+func (n *Node) StartGRPC() error {
 	addr := n.config.GRPCHost + ":" + fmt.Sprintf("%d", n.config.GRPCPort)
-
-	return Serve(n.grpcServer, addr, backend)
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	go n.grpcServer.Serve(lis)
+	return err
 
 }
 

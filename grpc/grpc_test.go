@@ -28,6 +28,6 @@ func TestGrpc(t *testing.T) {
 
 	reply1, err := client.GetBlockNumber(ctx, &pb.GetBlockNumberReq{})
 	assert.Nil(t, err, "GetBlockNumber error:%+v", err)
-	assert.Less(t, reply1.Number, uint64(99999))
+	assert.Greater(t, reply1.Number, uint64(99999))
 
 }

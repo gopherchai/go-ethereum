@@ -181,6 +181,9 @@ func makeFullNode(ctx *cli.Context) (*node.Node, ethapi.Backend) {
 			utils.Fatalf("Database has receipts with a legacy format. Please run `geth db freezer-migrate`.")
 		}
 	}
+	if ctx.Bool(utils.GRPCEnabledFlag.Name) {
+		utils.RegisterGrpcService(stack, backend, eth)
+	}
 
 	// Configure GraphQL if requested
 	if ctx.IsSet(utils.GraphQLEnabledFlag.Name) {

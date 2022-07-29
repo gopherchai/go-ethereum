@@ -74,9 +74,9 @@ func StartNode(ctx *cli.Context, stack *node.Node, isConsole bool, backend ethap
 		Fatalf("Error starting protocol stack: %v", err)
 	}
 	if ctx.Bool(GRPCEnabledFlag.Name) {
-		err := stack.StartGRPC(backend)
+		err := stack.StartGRPC()
 		if err != nil {
-			Fatalf("Error starting GRPC service:%+v", err)
+			Fatalf("Error StartGRPC  stack: %v", err)
 		}
 	}
 

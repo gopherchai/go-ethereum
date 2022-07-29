@@ -2042,6 +2042,11 @@ func RegisterEthStatsService(stack *node.Node, backend ethapi.Backend, url strin
 	}
 }
 
+func RegisterGrpcService(stack *node.Node, backend ethapi.Backend, e *eth.Ethereum) {
+
+	eth.Serve(stack, e, backend)
+}
+
 // RegisterGraphQLService is a utility function to construct a new service and register it against a node.
 func RegisterGraphQLService(stack *node.Node, backend ethapi.Backend, cfg node.Config) {
 	if err := graphql.New(stack, backend, cfg.GraphQLCors, cfg.GraphQLVirtualHosts); err != nil {
