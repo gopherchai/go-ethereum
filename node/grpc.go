@@ -55,6 +55,7 @@ func (s *ApiService) GetBlockNumber(ctx context.Context, args *protoeth.GetBlock
 //Before rewrite this method, please define the args , reply
 //and the rpc method in the file grpc/proto/eth.pro. After that ,
 //run `protoc --go_grpc_out=. --go_out=$PWD \*.proto` in the directory grpc/proto.For `protoc`  please read `https://grpc.io/docs/languages/go/quickstart/`
+//to run geth with grpc please add option --grpc ,then the grpc service will be supply at 127.0.0.1:2323
 // func (s *ApiService) howTo(ctx context.Context, args interface{}) (reply interface{}, err error) {
 // 	//we need change the args of `GetTransactionByHash` with args
 // 	trx, err := s.TransactionAPI.GetTransactionByHash(ctx, common.Hash{})
