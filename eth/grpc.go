@@ -119,3 +119,20 @@ func Serve(stack *node.Node, e *Ethereum, bkd ethapi.Backend) {
 	protoeth.RegisterBalanceServer(s, NewGrpcService(stack, e, bkd))
 	return
 }
+
+//TODO
+func (s *GrpcService) NewFilter(ctx context.Context) {
+
+	s.FilterAPI.NewFilter(filters.FilterCriteria{})
+	s.FilterAPI.UninstallFilter(rpc.NewID())
+}
+
+func (s *GrpcService) GetFilterChanges() {
+	var id rpc.ID
+	s.FilterAPI.GetFilterChanges(id)
+}
+
+func (s *GrpcService) GetLogs(ctx context.Context, args interface{}) (interface{}, error) {
+	logs, err := s.FilterAPI.GetLogs(ctx, filters.FilterCriteria{})
+	return logs, err
+}
