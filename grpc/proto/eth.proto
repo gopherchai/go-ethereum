@@ -20,11 +20,11 @@ message GetBlockNumberReq {}
 message GetBlockNumberResp { uint64 number = 1; }
 
 message NewFilterReq {
-  string BlockHash = 1;
-  uint64 FromBlock = 2;
-  uint64 ToBlock = 3;
-  repeated string Addresses = 4;
-  repeated google.protobuf.ListValue Topics = 5;
+  string blockHash = 1;
+  uint64 fromBlock = 2;
+  uint64 toBlock = 3;
+  repeated string addresses = 4;
+  repeated google.protobuf.ListValue topics = 5;
 }
 message NewFilterResp { string Id = 1; }
 
