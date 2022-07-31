@@ -29,7 +29,7 @@ type GrpcService struct {
 	*ethapi.DebugAPI
 	*ethapi.EthereumAccountAPI
 	*ethapi.PersonalAccountAPI
-	protoeth.UnimplementedBalanceServer
+	protoeth.UnimplementedRpcApiServer
 }
 
 func NewGrpcService(node *node.Node, e *Ethereum, bkd ethapi.Backend) *GrpcService {
@@ -116,23 +116,26 @@ func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceR
 
 func Serve(stack *node.Node, e *Ethereum, bkd ethapi.Backend) {
 	s := stack.GrpcServer()
-	protoeth.RegisterBalanceServer(s, NewGrpcService(stack, e, bkd))
+	protoeth.RegisterRpcApiServer(s, NewGrpcService(stack, e, bkd))
 	return
 }
 
-//TODO
-func (s *GrpcService) NewFilter(ctx context.Context) {
+func (s *GrpcService) NewFilter(ctx context.Context, args *protoeth.NewFilterReq) (*protoeth.NewFilterResp, error) {
 
-	s.FilterAPI.NewFilter(filters.FilterCriteria{})
-	s.FilterAPI.UninstallFilter(rpc.NewID())
+	id, err := s.FilterAPI.NewFilter(filters.FilterCriteria{})
+	return &protoeth.NewFilterResp{
+		Id: string(id),
+	}, err
+
 }
 
 func (s *GrpcService) GetFilterChanges() {
 	var id rpc.ID
+	//TODO convert to type in one proto message and use stream mode to send response continuosly
 	s.FilterAPI.GetFilterChanges(id)
 }
 
-func (s *GrpcService) GetLogs(ctx context.Context, args interface{}) (interface{}, error) {
-	logs, err := s.FilterAPI.GetLogs(ctx, filters.FilterCriteria{})
-	return logs, err
-}
+// func (s *GrpcService) GetLogs(ctx context.Context, args interface{}) (interface{}, error) {
+// 	logs, err := s.FilterAPI.GetLogs(ctx, filters.FilterCriteria{})
+// 	return logs, err
+// }

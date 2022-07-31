@@ -1,5 +1,6 @@
 syntax = "proto3";
 package protoeth;
+import "google/protobuf/struct.proto";
 option go_package = "./protoeth";
 
 // import "google/protobuf/empty.proto";
@@ -18,7 +19,19 @@ message GetBalanceResp { string balance = 1; }
 message GetBlockNumberReq {}
 message GetBlockNumberResp { uint64 number = 1; }
 
-service balance {
+message NewFilterReq {
+  string BlockHash = 1;
+  uint64 FromBlock = 2;
+  uint64 ToBlock = 3;
+  repeated string Addresses = 4;
+  repeated google.protobuf.ListValue Topics = 5;
+}
+message NewFilterResp { string Id = 1; }
+
+message GetFilterChangeReq { string Id = 1; }
+
+service RpcApi {
   rpc getBalance(GetBalanceReq) returns (GetBalanceResp);
   rpc getBlockNumber(GetBlockNumberReq) returns (GetBlockNumberResp);
+  rpc newFilter(NewFilterReq) returns (NewFilterResp);
 }
