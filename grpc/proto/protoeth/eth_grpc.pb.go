@@ -25,6 +25,7 @@ type RpcApiClient interface {
 	GetBalance(ctx context.Context, in *GetBalanceReq, opts ...grpc.CallOption) (*GetBalanceResp, error)
 	GetBlockNumber(ctx context.Context, in *GetBlockNumberReq, opts ...grpc.CallOption) (*GetBlockNumberResp, error)
 	NewFilter(ctx context.Context, in *NewFilterReq, opts ...grpc.CallOption) (*NewFilterResp, error)
+	GetFilterChanges(ctx context.Context, in *GetFilterChangeReq, opts ...grpc.CallOption) (RpcApi_GetFilterChangesClient, error)
 }
 
 type rpcApiClient struct {
@@ -62,6 +63,38 @@ func (c *rpcApiClient) NewFilter(ctx context.Context, in *NewFilterReq, opts ...
 	return out, nil
 }
 
+func (c *rpcApiClient) GetFilterChanges(ctx context.Context, in *GetFilterChangeReq, opts ...grpc.CallOption) (RpcApi_GetFilterChangesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RpcApi_ServiceDesc.Streams[0], "/protoeth.RpcApi/getFilterChanges", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &rpcApiGetFilterChangesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RpcApi_GetFilterChangesClient interface {
+	Recv() (*GetFilterChangeResp, error)
+	grpc.ClientStream
+}
+
+type rpcApiGetFilterChangesClient struct {
+	grpc.ClientStream
+}
+
+func (x *rpcApiGetFilterChangesClient) Recv() (*GetFilterChangeResp, error) {
+	m := new(GetFilterChangeResp)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // RpcApiServer is the server API for RpcApi service.
 // All implementations must embed UnimplementedRpcApiServer
 // for forward compatibility
@@ -69,6 +102,7 @@ type RpcApiServer interface {
 	GetBalance(context.Context, *GetBalanceReq) (*GetBalanceResp, error)
 	GetBlockNumber(context.Context, *GetBlockNumberReq) (*GetBlockNumberResp, error)
 	NewFilter(context.Context, *NewFilterReq) (*NewFilterResp, error)
+	GetFilterChanges(*GetFilterChangeReq, RpcApi_GetFilterChangesServer) error
 	mustEmbedUnimplementedRpcApiServer()
 }
 
@@ -84,6 +118,9 @@ func (UnimplementedRpcApiServer) GetBlockNumber(context.Context, *GetBlockNumber
 }
 func (UnimplementedRpcApiServer) NewFilter(context.Context, *NewFilterReq) (*NewFilterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewFilter not implemented")
+}
+func (UnimplementedRpcApiServer) GetFilterChanges(*GetFilterChangeReq, RpcApi_GetFilterChangesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetFilterChanges not implemented")
 }
 func (UnimplementedRpcApiServer) mustEmbedUnimplementedRpcApiServer() {}
 
@@ -152,6 +189,27 @@ func _RpcApi_NewFilter_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RpcApi_GetFilterChanges_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetFilterChangeReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RpcApiServer).GetFilterChanges(m, &rpcApiGetFilterChangesServer{stream})
+}
+
+type RpcApi_GetFilterChangesServer interface {
+	Send(*GetFilterChangeResp) error
+	grpc.ServerStream
+}
+
+type rpcApiGetFilterChangesServer struct {
+	grpc.ServerStream
+}
+
+func (x *rpcApiGetFilterChangesServer) Send(m *GetFilterChangeResp) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // RpcApi_ServiceDesc is the grpc.ServiceDesc for RpcApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -172,6 +230,12 @@ var RpcApi_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RpcApi_NewFilter_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "getFilterChanges",
+			Handler:       _RpcApi_GetFilterChanges_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "eth.proto",
 }

@@ -2,8 +2,11 @@ package eth
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/grpc/proto/protoeth"
@@ -129,10 +132,43 @@ func (s *GrpcService) NewFilter(ctx context.Context, args *protoeth.NewFilterReq
 
 }
 
-func (s *GrpcService) GetFilterChanges() {
+func (s *GrpcService) GetFilterChanges(args *protoeth.GetFilterChangeReq, stream protoeth.RpcApi_GetFilterChangesServer) error {
+	//请求加参数，说明要持续多长时间
 	var id rpc.ID
-	//TODO convert to type in one proto message and use stream mode to send response continuosly
-	s.FilterAPI.GetFilterChanges(id)
+	t := time.NewTicker(time.Minute * 4)
+	id = rpc.ID(args.Id)
+
+	now := time.Now()
+	end := now.Add(time.Minute * time.Duration(args.Timeout))
+	defer t.Stop()
+
+	for range t.C {
+		if end.Before(time.Now()) {
+			break
+		}
+		result, err := s.FilterAPI.GetFilterChanges(id)
+		if err != nil {
+			return err
+		}
+		resp := &protoeth.GetFilterChangeResp{}
+		switch v := result.(type) {
+		case []*types.Log:
+			var logs = make([]*protoeth.Log, 0, 0)
+			bdata, _ := json.Marshal(v)
+			json.Unmarshal(bdata, &logs)
+			resp.Logs = logs
+
+		case []common.Hash:
+			var hashes = make([]string, 0, 0)
+			bdata, _ := json.Marshal(v)
+			json.Unmarshal(bdata, &hashes)
+			resp.Hashes = hashes
+		}
+		stream.Send(resp)
+
+	}
+	return nil
+
 }
 
 // func (s *GrpcService) GetLogs(ctx context.Context, args interface{}) (interface{}, error) {
