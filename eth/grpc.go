@@ -2,8 +2,13 @@ package eth
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/grpc/proto/protoeth"
@@ -29,7 +34,7 @@ type GrpcService struct {
 	*ethapi.DebugAPI
 	*ethapi.EthereumAccountAPI
 	*ethapi.PersonalAccountAPI
-	protoeth.UnimplementedBalanceServer
+	protoeth.UnimplementedRpcApiServer
 }
 
 func NewGrpcService(node *node.Node, e *Ethereum, bkd ethapi.Backend) *GrpcService {
@@ -102,7 +107,7 @@ func (s *GrpcService) GetBlockNumber(ctx context.Context, args *protoeth.GetBloc
 // }
 
 func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceReq) (*protoeth.GetBalanceResp, error) {
-	addr := common.BytesToAddress([]byte(args.Address))
+	addr := common.HexToAddress(args.Address)
 
 	amount, err := s.BlockChainAPI.GetBalance(ctx, addr, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber))
 	if err != nil {
@@ -110,12 +115,137 @@ func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceR
 	}
 
 	return &protoeth.GetBalanceResp{
-		Balance: amount.ToInt().String(),
+		Balance: amount.String(),
 	}, nil
 }
 
 func Serve(stack *node.Node, e *Ethereum, bkd ethapi.Backend) {
 	s := stack.GrpcServer()
-	protoeth.RegisterBalanceServer(s, NewGrpcService(stack, e, bkd))
+	protoeth.RegisterRpcApiServer(s, NewGrpcService(stack, e, bkd))
 	return
+}
+
+func (s *GrpcService) NewFilter(ctx context.Context, args *protoeth.NewFilterReq) (*protoeth.NewFilterResp, error) {
+
+	id, err := s.FilterAPI.NewFilter(filters.FilterCriteria{})
+	return &protoeth.NewFilterResp{
+		Id: string(id),
+	}, err
+
+}
+
+func (s *GrpcService) GetFilterChanges(args *protoeth.GetFilterChangeReq, stream protoeth.RpcApi_GetFilterChangesServer) error {
+	//请求加参数，说明要持续多长时间
+	var id rpc.ID
+	t := time.NewTicker(time.Minute * 4)
+	id = rpc.ID(args.Id)
+
+	now := time.Now()
+	end := now.Add(time.Minute * time.Duration(args.Timeout))
+	defer t.Stop()
+
+	for range t.C {
+		if end.Before(time.Now()) {
+			break
+		}
+		result, err := s.FilterAPI.GetFilterChanges(id)
+		if err != nil {
+			return err
+		}
+		resp := &protoeth.GetFilterChangeResp{}
+		switch v := result.(type) {
+		case []*types.Log:
+			var logs = make([]*protoeth.Log, 0, 0)
+			bdata, _ := json.Marshal(v)
+			json.Unmarshal(bdata, &logs)
+			resp.Logs = logs
+
+		case []common.Hash:
+			var hashes = make([]string, 0, 0)
+			bdata, _ := json.Marshal(v)
+			json.Unmarshal(bdata, &hashes)
+			resp.Hashes = hashes
+		}
+		stream.Send(resp)
+
+	}
+	return nil
+
+}
+
+func (s *GrpcService) StartMining(ctx context.Context, args *protoeth.StartMiningReq) (*protoeth.StartMiningResp, error) {
+	num := int(args.Num)
+	err := s.ethMinerAPI.Start(&num)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.StartMiningResp{}, err
+}
+
+func (s *GrpcService) StopMining(ctx context.Context, args *protoeth.StopMiningReq) (*protoeth.StopMiningResp, error) {
+	s.ethMinerAPI.Stop()
+	return &protoeth.StopMiningResp{}, nil
+}
+
+func (s *GrpcService) SetEtherbase(ctx context.Context, args *protoeth.SetEtherbaseReq) (*protoeth.SetEtherBaseResp, error) {
+
+	ok := s.ethMinerAPI.SetEtherbase(common.HexToAddress(args.Address))
+	if !ok {
+		return nil, errors.New("not set")
+	}
+	return &protoeth.SetEtherBaseResp{}, nil
+}
+
+func (s *GrpcService) UnlockAccount(ctx context.Context, args *protoeth.UnlockAccountReq) (*protoeth.UnlockAccountResp, error) {
+	addr := common.HexToAddress(args.Address)
+	_, err := s.PersonalAccountAPI.UnlockAccount(ctx, addr, args.Password, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.UnlockAccountResp{}, err
+}
+
+func (s *GrpcService) ImportRawKey(ctx context.Context, args *protoeth.ImportRawKeyReq) (*protoeth.ImportRawKeyResp, error) {
+	addr, err := s.PersonalAccountAPI.ImportRawKey(args.Key, args.Password)
+	if err != nil {
+		if err == keystore.ErrAccountAlreadyExists {
+			return &protoeth.ImportRawKeyResp{}, nil
+		}
+		return nil, err
+	}
+
+	return &protoeth.ImportRawKeyResp{
+		Address: addr.Hex(),
+	}, nil
+}
+
+func (s *GrpcService) SendTransaction(ctx context.Context, args *protoeth.TransactionReq) (*protoeth.TransactionResp, error) {
+
+	bdata, err := json.Marshal(args)
+	if err != nil {
+		return nil, err
+	}
+	var req ethapi.TransactionArgs
+	err = json.Unmarshal(bdata, &req)
+	if err != nil {
+		return nil, err
+	}
+	gasPrice, err := s.EthereumAPI.GasPrice(ctx)
+	if err != nil {
+		return nil, err
+	}
+	nonce, err := s.TransactionAPI.GetTransactionCount(ctx, *req.From, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber))
+	if err != nil {
+		return nil, err
+	}
+	req.Nonce = nonce
+	req.ChainID = s.BlockChainAPI.ChainId()
+	req.GasPrice = gasPrice
+	//s.BlockChainAPI.ChainId()
+
+	hash, err := s.TransactionAPI.SendTransaction(ctx, req)
+
+	return &protoeth.TransactionResp{
+		TxHash: hash.String(),
+	}, err
 }

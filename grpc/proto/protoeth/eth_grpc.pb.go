@@ -18,124 +18,440 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// BalanceClient is the client API for Balance service.
+// RpcApiClient is the client API for RpcApi service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type BalanceClient interface {
+type RpcApiClient interface {
+	StartMining(ctx context.Context, in *StartMiningReq, opts ...grpc.CallOption) (*StartMiningResp, error)
+	StopMining(ctx context.Context, in *StopMiningReq, opts ...grpc.CallOption) (*StopMiningResp, error)
+	SetEtherbase(ctx context.Context, in *SetEtherbaseReq, opts ...grpc.CallOption) (*SetEtherBaseResp, error)
+	UnlockAccount(ctx context.Context, in *UnlockAccountReq, opts ...grpc.CallOption) (*UnlockAccountResp, error)
 	GetBalance(ctx context.Context, in *GetBalanceReq, opts ...grpc.CallOption) (*GetBalanceResp, error)
 	GetBlockNumber(ctx context.Context, in *GetBlockNumberReq, opts ...grpc.CallOption) (*GetBlockNumberResp, error)
+	NewFilter(ctx context.Context, in *NewFilterReq, opts ...grpc.CallOption) (*NewFilterResp, error)
+	GetFilterChanges(ctx context.Context, in *GetFilterChangeReq, opts ...grpc.CallOption) (RpcApi_GetFilterChangesClient, error)
+	ImportRawKey(ctx context.Context, in *ImportRawKeyReq, opts ...grpc.CallOption) (*ImportRawKeyResp, error)
+	SendTransaction(ctx context.Context, in *TransactionReq, opts ...grpc.CallOption) (*TransactionResp, error)
 }
 
-type balanceClient struct {
+type rpcApiClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewBalanceClient(cc grpc.ClientConnInterface) BalanceClient {
-	return &balanceClient{cc}
+func NewRpcApiClient(cc grpc.ClientConnInterface) RpcApiClient {
+	return &rpcApiClient{cc}
 }
 
-func (c *balanceClient) GetBalance(ctx context.Context, in *GetBalanceReq, opts ...grpc.CallOption) (*GetBalanceResp, error) {
+func (c *rpcApiClient) StartMining(ctx context.Context, in *StartMiningReq, opts ...grpc.CallOption) (*StartMiningResp, error) {
+	out := new(StartMiningResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/startMining", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) StopMining(ctx context.Context, in *StopMiningReq, opts ...grpc.CallOption) (*StopMiningResp, error) {
+	out := new(StopMiningResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/stopMining", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) SetEtherbase(ctx context.Context, in *SetEtherbaseReq, opts ...grpc.CallOption) (*SetEtherBaseResp, error) {
+	out := new(SetEtherBaseResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/setEtherbase", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) UnlockAccount(ctx context.Context, in *UnlockAccountReq, opts ...grpc.CallOption) (*UnlockAccountResp, error) {
+	out := new(UnlockAccountResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/unlockAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) GetBalance(ctx context.Context, in *GetBalanceReq, opts ...grpc.CallOption) (*GetBalanceResp, error) {
 	out := new(GetBalanceResp)
-	err := c.cc.Invoke(ctx, "/protoeth.balance/getBalance", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/getBalance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *balanceClient) GetBlockNumber(ctx context.Context, in *GetBlockNumberReq, opts ...grpc.CallOption) (*GetBlockNumberResp, error) {
+func (c *rpcApiClient) GetBlockNumber(ctx context.Context, in *GetBlockNumberReq, opts ...grpc.CallOption) (*GetBlockNumberResp, error) {
 	out := new(GetBlockNumberResp)
-	err := c.cc.Invoke(ctx, "/protoeth.balance/getBlockNumber", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/getBlockNumber", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// BalanceServer is the server API for Balance service.
-// All implementations must embed UnimplementedBalanceServer
+func (c *rpcApiClient) NewFilter(ctx context.Context, in *NewFilterReq, opts ...grpc.CallOption) (*NewFilterResp, error) {
+	out := new(NewFilterResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/newFilter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) GetFilterChanges(ctx context.Context, in *GetFilterChangeReq, opts ...grpc.CallOption) (RpcApi_GetFilterChangesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RpcApi_ServiceDesc.Streams[0], "/protoeth.RpcApi/getFilterChanges", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &rpcApiGetFilterChangesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RpcApi_GetFilterChangesClient interface {
+	Recv() (*GetFilterChangeResp, error)
+	grpc.ClientStream
+}
+
+type rpcApiGetFilterChangesClient struct {
+	grpc.ClientStream
+}
+
+func (x *rpcApiGetFilterChangesClient) Recv() (*GetFilterChangeResp, error) {
+	m := new(GetFilterChangeResp)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *rpcApiClient) ImportRawKey(ctx context.Context, in *ImportRawKeyReq, opts ...grpc.CallOption) (*ImportRawKeyResp, error) {
+	out := new(ImportRawKeyResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/importRawKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) SendTransaction(ctx context.Context, in *TransactionReq, opts ...grpc.CallOption) (*TransactionResp, error) {
+	out := new(TransactionResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/sendTransaction", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// RpcApiServer is the server API for RpcApi service.
+// All implementations must embed UnimplementedRpcApiServer
 // for forward compatibility
-type BalanceServer interface {
+type RpcApiServer interface {
+	StartMining(context.Context, *StartMiningReq) (*StartMiningResp, error)
+	StopMining(context.Context, *StopMiningReq) (*StopMiningResp, error)
+	SetEtherbase(context.Context, *SetEtherbaseReq) (*SetEtherBaseResp, error)
+	UnlockAccount(context.Context, *UnlockAccountReq) (*UnlockAccountResp, error)
 	GetBalance(context.Context, *GetBalanceReq) (*GetBalanceResp, error)
 	GetBlockNumber(context.Context, *GetBlockNumberReq) (*GetBlockNumberResp, error)
-	mustEmbedUnimplementedBalanceServer()
+	NewFilter(context.Context, *NewFilterReq) (*NewFilterResp, error)
+	GetFilterChanges(*GetFilterChangeReq, RpcApi_GetFilterChangesServer) error
+	ImportRawKey(context.Context, *ImportRawKeyReq) (*ImportRawKeyResp, error)
+	SendTransaction(context.Context, *TransactionReq) (*TransactionResp, error)
+	mustEmbedUnimplementedRpcApiServer()
 }
 
-// UnimplementedBalanceServer must be embedded to have forward compatible implementations.
-type UnimplementedBalanceServer struct {
+// UnimplementedRpcApiServer must be embedded to have forward compatible implementations.
+type UnimplementedRpcApiServer struct {
 }
 
-func (UnimplementedBalanceServer) GetBalance(context.Context, *GetBalanceReq) (*GetBalanceResp, error) {
+func (UnimplementedRpcApiServer) StartMining(context.Context, *StartMiningReq) (*StartMiningResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartMining not implemented")
+}
+func (UnimplementedRpcApiServer) StopMining(context.Context, *StopMiningReq) (*StopMiningResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StopMining not implemented")
+}
+func (UnimplementedRpcApiServer) SetEtherbase(context.Context, *SetEtherbaseReq) (*SetEtherBaseResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetEtherbase not implemented")
+}
+func (UnimplementedRpcApiServer) UnlockAccount(context.Context, *UnlockAccountReq) (*UnlockAccountResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnlockAccount not implemented")
+}
+func (UnimplementedRpcApiServer) GetBalance(context.Context, *GetBalanceReq) (*GetBalanceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
 }
-func (UnimplementedBalanceServer) GetBlockNumber(context.Context, *GetBlockNumberReq) (*GetBlockNumberResp, error) {
+func (UnimplementedRpcApiServer) GetBlockNumber(context.Context, *GetBlockNumberReq) (*GetBlockNumberResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlockNumber not implemented")
 }
-func (UnimplementedBalanceServer) mustEmbedUnimplementedBalanceServer() {}
+func (UnimplementedRpcApiServer) NewFilter(context.Context, *NewFilterReq) (*NewFilterResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NewFilter not implemented")
+}
+func (UnimplementedRpcApiServer) GetFilterChanges(*GetFilterChangeReq, RpcApi_GetFilterChangesServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetFilterChanges not implemented")
+}
+func (UnimplementedRpcApiServer) ImportRawKey(context.Context, *ImportRawKeyReq) (*ImportRawKeyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImportRawKey not implemented")
+}
+func (UnimplementedRpcApiServer) SendTransaction(context.Context, *TransactionReq) (*TransactionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendTransaction not implemented")
+}
+func (UnimplementedRpcApiServer) mustEmbedUnimplementedRpcApiServer() {}
 
-// UnsafeBalanceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to BalanceServer will
+// UnsafeRpcApiServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to RpcApiServer will
 // result in compilation errors.
-type UnsafeBalanceServer interface {
-	mustEmbedUnimplementedBalanceServer()
+type UnsafeRpcApiServer interface {
+	mustEmbedUnimplementedRpcApiServer()
 }
 
-func RegisterBalanceServer(s grpc.ServiceRegistrar, srv BalanceServer) {
-	s.RegisterService(&Balance_ServiceDesc, srv)
+func RegisterRpcApiServer(s grpc.ServiceRegistrar, srv RpcApiServer) {
+	s.RegisterService(&RpcApi_ServiceDesc, srv)
 }
 
-func _Balance_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _RpcApi_StartMining_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartMiningReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).StartMining(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/startMining",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).StartMining(ctx, req.(*StartMiningReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_StopMining_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StopMiningReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).StopMining(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/stopMining",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).StopMining(ctx, req.(*StopMiningReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_SetEtherbase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetEtherbaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).SetEtherbase(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/setEtherbase",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).SetEtherbase(ctx, req.(*SetEtherbaseReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_UnlockAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnlockAccountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).UnlockAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/unlockAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).UnlockAccount(ctx, req.(*UnlockAccountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetBalanceReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BalanceServer).GetBalance(ctx, in)
+		return srv.(RpcApiServer).GetBalance(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/protoeth.balance/getBalance",
+		FullMethod: "/protoeth.RpcApi/getBalance",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BalanceServer).GetBalance(ctx, req.(*GetBalanceReq))
+		return srv.(RpcApiServer).GetBalance(ctx, req.(*GetBalanceReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Balance_GetBlockNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _RpcApi_GetBlockNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetBlockNumberReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BalanceServer).GetBlockNumber(ctx, in)
+		return srv.(RpcApiServer).GetBlockNumber(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/protoeth.balance/getBlockNumber",
+		FullMethod: "/protoeth.RpcApi/getBlockNumber",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BalanceServer).GetBlockNumber(ctx, req.(*GetBlockNumberReq))
+		return srv.(RpcApiServer).GetBlockNumber(ctx, req.(*GetBlockNumberReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Balance_ServiceDesc is the grpc.ServiceDesc for Balance service.
+func _RpcApi_NewFilter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewFilterReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).NewFilter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/newFilter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).NewFilter(ctx, req.(*NewFilterReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_GetFilterChanges_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetFilterChangeReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RpcApiServer).GetFilterChanges(m, &rpcApiGetFilterChangesServer{stream})
+}
+
+type RpcApi_GetFilterChangesServer interface {
+	Send(*GetFilterChangeResp) error
+	grpc.ServerStream
+}
+
+type rpcApiGetFilterChangesServer struct {
+	grpc.ServerStream
+}
+
+func (x *rpcApiGetFilterChangesServer) Send(m *GetFilterChangeResp) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _RpcApi_ImportRawKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportRawKeyReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).ImportRawKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/importRawKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).ImportRawKey(ctx, req.(*ImportRawKeyReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_SendTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransactionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).SendTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/sendTransaction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).SendTransaction(ctx, req.(*TransactionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// RpcApi_ServiceDesc is the grpc.ServiceDesc for RpcApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Balance_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "protoeth.balance",
-	HandlerType: (*BalanceServer)(nil),
+var RpcApi_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "protoeth.RpcApi",
+	HandlerType: (*RpcApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "startMining",
+			Handler:    _RpcApi_StartMining_Handler,
+		},
+		{
+			MethodName: "stopMining",
+			Handler:    _RpcApi_StopMining_Handler,
+		},
+		{
+			MethodName: "setEtherbase",
+			Handler:    _RpcApi_SetEtherbase_Handler,
+		},
+		{
+			MethodName: "unlockAccount",
+			Handler:    _RpcApi_UnlockAccount_Handler,
+		},
+		{
 			MethodName: "getBalance",
-			Handler:    _Balance_GetBalance_Handler,
+			Handler:    _RpcApi_GetBalance_Handler,
 		},
 		{
 			MethodName: "getBlockNumber",
-			Handler:    _Balance_GetBlockNumber_Handler,
+			Handler:    _RpcApi_GetBlockNumber_Handler,
+		},
+		{
+			MethodName: "newFilter",
+			Handler:    _RpcApi_NewFilter_Handler,
+		},
+		{
+			MethodName: "importRawKey",
+			Handler:    _RpcApi_ImportRawKey_Handler,
+		},
+		{
+			MethodName: "sendTransaction",
+			Handler:    _RpcApi_SendTransaction_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "getFilterChanges",
+			Handler:       _RpcApi_GetFilterChanges_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "eth.proto",
 }

@@ -1,5 +1,6 @@
 syntax = "proto3";
 package protoeth;
+import "google/protobuf/struct.proto";
 option go_package = "./protoeth";
 
 // import "google/protobuf/empty.proto";
@@ -18,7 +19,88 @@ message GetBalanceResp { string balance = 1; }
 message GetBlockNumberReq {}
 message GetBlockNumberResp { uint64 number = 1; }
 
-service balance {
+message NewFilterReq {
+  string blockHash = 1;
+  uint64 fromBlock = 2;
+  uint64 toBlock = 3;
+  repeated string addresses = 4;
+  repeated google.protobuf.ListValue topics = 5;
+}
+message NewFilterResp { string Id = 1; }
+
+message GetFilterChangeReq {
+  string Id = 1;
+  uint64 timeout = 2;
+}
+message GetFilterChangeResp {
+  repeated string hashes = 1;
+  repeated log logs = 2;
+};
+
+message log {
+  string address = 1;
+  repeated google.protobuf.ListValue topics = 2;
+  string data = 3;
+  uint64 blockNumber = 4;
+  string txHash = 5;
+  uint64 txIndex = 6;
+  string blockHash = 7;
+  uint64 index = 8;
+  bool removed = 9;
+}
+
+message setEtherbaseReq { string address = 1; }
+message setEtherBaseResp {}
+
+message startMiningReq { uint32 num = 1; }
+message startMiningResp {}
+
+message stopMiningReq {}
+message stopMiningResp {}
+
+message unlockAccountReq {
+  string address = 1;
+  string password = 2;
+}
+message unlockAccountResp {}
+
+message importRawKeyReq {
+  string key = 1;
+  string password = 2;
+}
+
+message importRawKeyResp { string address = 1; }
+
+message transactionReq {
+  string from = 1;
+  string to = 2;
+  uint64 gas = 3;
+  string gasPrice = 4;
+  string maxFeePerGas = 5;
+  string maxPriorityFeePerGas = 6;
+  string value = 7;
+  uint64 nonce = 8;
+  string data = 9;
+  string input = 10;
+  string chainId = 11;
+  repeated accessList accessList = 12;
+}
+message accessList {
+  string address = 1;
+  google.protobuf.ListValue storageKeys = 2;
+}
+message transactionResp { string txHash = 1; }
+
+service RpcApi {
+  rpc startMining(startMiningReq) returns (startMiningResp);
+  rpc stopMining(stopMiningReq) returns (stopMiningResp);
+  rpc setEtherbase(setEtherbaseReq) returns (setEtherBaseResp);
+  rpc unlockAccount(unlockAccountReq) returns (unlockAccountResp);
+
   rpc getBalance(GetBalanceReq) returns (GetBalanceResp);
   rpc getBlockNumber(GetBlockNumberReq) returns (GetBlockNumberResp);
+  rpc newFilter(NewFilterReq) returns (NewFilterResp);
+  rpc getFilterChanges(GetFilterChangeReq) returns (stream GetFilterChangeResp);
+  rpc importRawKey(importRawKeyReq) returns (importRawKeyResp);
+  rpc sendTransaction(transactionReq) returns (transactionResp);
 }
