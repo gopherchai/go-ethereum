@@ -90,7 +90,7 @@ func testStartMiningAndSetEtherbase(t *testing.T) {
 		Num: 1,
 	})
 	require.Nil(t, err)
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	num2, err := client.GetBlockNumber(ctx, &pb.GetBlockNumberReq{})
 	require.Nil(t, err)
 	require.Greater(t, num2.Number, num.Number)
@@ -101,7 +101,7 @@ func testStartMiningAndSetEtherbase(t *testing.T) {
 	require.Nil(t, err)
 	b1, _ := hexutil.DecodeBig(balance.Balance)
 	b2, _ := hexutil.DecodeBig(balance2.Balance)
-	require.Equal(t, b2.Cmp(b1), 1)
+	require.Equal(t, 1, b2.Cmp(b1))
 
 }
 
@@ -134,47 +134,52 @@ func TestTransaction(t *testing.T) {
 	client.UnlockAccount(ctx, &pb.UnlockAccountReq{
 		Address: address1.String(),
 	})
+	for i := 0; i < 1000; i++ {
 
-	gas := hexutil.Uint64(uint64(394191312861098))
-	//mfpg := hexutil.Big(*big.NewInt(int64(100)))
-	v := hexutil.Big(*big.NewInt(int64(3941913128610986)))
+		gas := hexutil.Uint64(uint64(3200498))
+		//mfpg := hexutil.Big(*big.NewInt(int64(100)))
 
-	req := ethapi.TransactionArgs{
-		From:                 &address1,
-		To:                   &address2,
-		Gas:                  &gas,
-		GasPrice:             nil,
-		MaxFeePerGas:         nil,
-		MaxPriorityFeePerGas: nil,
-		Value:                &v,
-		Nonce:                nil,
-		Data:                 nil,
-		Input:                nil,
-		AccessList:           nil,
-		ChainID:              nil,
+		var v hexutil.Big
+		err = v.UnmarshalText([]byte("0x929919999999999999999999999999999999999999999999999999999999"))
+		require.Nil(t, err)
+		//v := hexutil.Big(*big.NewInt(int64(3941913128610986)))
+
+		req := ethapi.TransactionArgs{
+			From:                 &address1,
+			To:                   &address2,
+			Gas:                  &gas,
+			GasPrice:             nil,
+			MaxFeePerGas:         nil,
+			MaxPriorityFeePerGas: nil,
+			Value:                &v,
+			Nonce:                nil,
+			Data:                 nil,
+			Input:                nil,
+			AccessList:           nil,
+			ChainID:              nil,
+		}
+		bdata, _ := json.Marshal(req)
+		arg := pb.TransactionReq{}
+		json.Unmarshal(bdata, &arg)
+		balance, err := client.GetBalance(ctx, &pb.GetBalanceReq{
+			Address: address2.String(),
+		})
+		require.Nil(t, err, grpc.ErrorDesc(err))
+		resp, err := client.SendTransaction(ctx, &arg)
+
+		require.Nil(t, err, grpc.ErrorDesc(err))
+		require.NotNil(t, resp)
+		time.Sleep(time.Second * 4)
+		balance2, err := client.GetBalance(ctx, &pb.GetBalanceReq{
+			Address: address2.String(),
+		})
+
+		require.Nil(t, err, grpc.ErrorDesc(err))
+		b1, _ := hexutil.DecodeBig(balance.Balance)
+		b2, _ := hexutil.DecodeBig(balance2.Balance)
+		t.Logf("b:%+v,%+v", balance, balance2)
+		require.Equal(t, b2.Cmp(b1), 1, "b:%+v,%+v", balance, balance2)
 	}
-	bdata, _ := json.Marshal(req)
-	arg := pb.TransactionReq{}
-	json.Unmarshal(bdata, &arg)
-	balance, err := client.GetBalance(ctx, &pb.GetBalanceReq{
-		Address: address2.String(),
-	})
-	require.Nil(t, err, grpc.ErrorDesc(err))
-	resp, err := client.SendTransaction(ctx, &arg)
-
-	require.Nil(t, err, grpc.ErrorDesc(err))
-	require.NotNil(t, resp)
-	time.Sleep(time.Second * 4)
-	balance2, err := client.GetBalance(ctx, &pb.GetBalanceReq{
-		Address: address2.String(),
-	})
-
-	require.Nil(t, err, grpc.ErrorDesc(err))
-	b1, _ := hexutil.DecodeBig(balance.Balance)
-	b2, _ := hexutil.DecodeBig(balance2.Balance)
-	t.Logf("b:%+v,%+v", balance, balance2)
-	require.Equal(t, b2.Cmp(b1), 1, "b:%+v,%+v", balance, balance2)
-
 }
 
 func TestDeployContract(t *testing.T) {
@@ -250,7 +255,14 @@ func TestGrpcGetBlockNumber(t *testing.T) {
 
 	reply1, err := client.GetBlockNumber(ctx, &pb.GetBlockNumberReq{})
 	assert.Nil(t, err, "GetBlockNumber error:%+v", err)
-	assert.Greater(t, reply1.Number, uint64(99999))
+
+	assert.Greater(t, reply1.Number, "0x7d")
+}
+
+func TestCmp(t *testing.T) {
+	a := hexutil.MustDecodeBig("0x11")
+	b := hexutil.MustDecodeBig("0x11")
+	assert.Equal(t, a, b)
 }
 
 const (

@@ -17,12 +17,12 @@ message GetBalanceReq { string address = 1; }
 message GetBalanceResp { string balance = 1; }
 
 message GetBlockNumberReq {}
-message GetBlockNumberResp { uint64 number = 1; }
+message GetBlockNumberResp { string number = 1; }
 
 message NewFilterReq {
   string blockHash = 1;
-  uint64 fromBlock = 2;
-  uint64 toBlock = 3;
+  string fromBlock = 2;
+  string toBlock = 3;
   repeated string addresses = 4;
   repeated google.protobuf.ListValue topics = 5;
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/grpc/proto/protoeth"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -82,7 +83,7 @@ func NewGrpcService(node *node.Node, e *Ethereum, bkd ethapi.Backend) *GrpcServi
 func (s *GrpcService) GetBlockNumber(ctx context.Context, args *protoeth.GetBlockNumberReq) (*protoeth.GetBlockNumberResp, error) {
 	hight := s.BlockChainAPI.BlockNumber()
 	return &protoeth.GetBlockNumberResp{
-		Number: uint64(hight),
+		Number: hight.String(),
 	}, nil
 }
 
@@ -127,7 +128,16 @@ func Serve(stack *node.Node, e *Ethereum, bkd ethapi.Backend) {
 
 func (s *GrpcService) NewFilter(ctx context.Context, args *protoeth.NewFilterReq) (*protoeth.NewFilterResp, error) {
 
-	id, err := s.FilterAPI.NewFilter(filters.FilterCriteria{})
+	bdata, err := json.Marshal(args)
+	if err != nil {
+		return nil, err
+	}
+	req := filters.FilterCriteria{}
+	err = json.Unmarshal(bdata, &req)
+	if err != nil {
+		return nil, err
+	}
+	id, err := s.FilterAPI.NewFilter(req)
 	return &protoeth.NewFilterResp{
 		Id: string(id),
 	}, err
@@ -166,7 +176,10 @@ func (s *GrpcService) GetFilterChanges(args *protoeth.GetFilterChangeReq, stream
 			json.Unmarshal(bdata, &hashes)
 			resp.Hashes = hashes
 		}
-		stream.Send(resp)
+		err = stream.Send(resp)
+		if err != nil {
+			log.Warn("send filterChange meet error:%+v", err)
+		}
 
 	}
 	return nil
