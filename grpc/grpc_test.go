@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -19,6 +20,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	vote "github.com/ethereum/go-ethereum/grpc/tests/contractProj/build/contracts"
 )
 
 var (
@@ -171,6 +174,62 @@ func TestTransaction(t *testing.T) {
 	b2, _ := hexutil.DecodeBig(balance2.Balance)
 	t.Logf("b:%+v,%+v", balance, balance2)
 	require.Equal(t, b2.Cmp(b1), 1, "b:%+v,%+v", balance, balance2)
+
+}
+
+func TestDeployContract(t *testing.T) {
+	setup(t)
+	_, err := client.UnlockAccount(ctx, &pb.UnlockAccountReq{
+		Address: address1.String(),
+	})
+	require.Nil(t, err)
+	//abi := vote.VoteABI
+	bin := vote.VoteBin
+	abi, err := vote.VoteMetaData.GetAbi()
+	require.Nil(t, err)
+	params := make([][32]byte, 0, 0)
+	for i := 0; i < 5; i++ {
+		var tmp [32]byte
+		str := tmp[:]
+		b := []byte(fmt.Sprintf("0x4592d8f8d7b001evote proposal-%d", i))
+		copy(str, b)
+		params = append(params, tmp)
+	}
+	input, err := abi.Pack("", params)
+	require.Nil(t, err)
+	input = append([]byte(bin), input...)
+	gas := hexutil.Uint64(uint64(3941918))
+	//mfpg := hexutil.Big(*big.NewInt(int64(100)))
+	v := hexutil.Big(*big.NewInt(int64(394190986)))
+
+	binput := hexutil.Bytes(input)
+	req := ethapi.TransactionArgs{
+		From:                 &address1,
+		To:                   nil,
+		Gas:                  &gas,
+		GasPrice:             nil,
+		MaxFeePerGas:         nil,
+		MaxPriorityFeePerGas: nil,
+		Value:                &v,
+		Nonce:                nil,
+		Data:                 nil,
+		Input:                &binput,
+		AccessList:           nil,
+		ChainID:              nil,
+	}
+
+	bdata, err := json.Marshal(req)
+	assert.Nil(t, err)
+	arg := pb.TransactionReq{}
+	err = json.Unmarshal(bdata, &arg)
+	assert.Nil(t, err)
+	resp, err := client.SendTransaction(ctx, &arg)
+
+	assert.Nil(t, err, grpc.ErrorDesc(err))
+
+	assert.NotNil(t, resp)
+	t.Errorf("get resp:%s", resp.TxHash)
+	time.Sleep(time.Second * 4)
 
 }
 
