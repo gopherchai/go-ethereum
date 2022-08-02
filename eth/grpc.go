@@ -3,8 +3,10 @@ package eth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/downloader"
@@ -105,7 +107,7 @@ func (s *GrpcService) GetBlockNumber(ctx context.Context, args *protoeth.GetBloc
 // }
 
 func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceReq) (*protoeth.GetBalanceResp, error) {
-	addr := common.BytesToAddress([]byte(args.Address))
+	addr := common.HexToAddress(args.Address)
 
 	amount, err := s.BlockChainAPI.GetBalance(ctx, addr, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber))
 	if err != nil {
@@ -113,7 +115,7 @@ func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceR
 	}
 
 	return &protoeth.GetBalanceResp{
-		Balance: amount.ToInt().String(),
+		Balance: amount.String(),
 	}, nil
 }
 
@@ -171,7 +173,79 @@ func (s *GrpcService) GetFilterChanges(args *protoeth.GetFilterChangeReq, stream
 
 }
 
-// func (s *GrpcService) GetLogs(ctx context.Context, args interface{}) (interface{}, error) {
-// 	logs, err := s.FilterAPI.GetLogs(ctx, filters.FilterCriteria{})
-// 	return logs, err
-// }
+func (s *GrpcService) StartMining(ctx context.Context, args *protoeth.StartMiningReq) (*protoeth.StartMiningResp, error) {
+	num := int(args.Num)
+	err := s.ethMinerAPI.Start(&num)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.StartMiningResp{}, err
+}
+
+func (s *GrpcService) StopMining(ctx context.Context, args *protoeth.StopMiningReq) (*protoeth.StopMiningResp, error) {
+	s.ethMinerAPI.Stop()
+	return &protoeth.StopMiningResp{}, nil
+}
+
+func (s *GrpcService) SetEtherbase(ctx context.Context, args *protoeth.SetEtherbaseReq) (*protoeth.SetEtherBaseResp, error) {
+
+	ok := s.ethMinerAPI.SetEtherbase(common.HexToAddress(args.Address))
+	if !ok {
+		return nil, errors.New("not set")
+	}
+	return &protoeth.SetEtherBaseResp{}, nil
+}
+
+func (s *GrpcService) UnlockAccount(ctx context.Context, args *protoeth.UnlockAccountReq) (*protoeth.UnlockAccountResp, error) {
+	addr := common.HexToAddress(args.Address)
+	_, err := s.PersonalAccountAPI.UnlockAccount(ctx, addr, args.Password, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.UnlockAccountResp{}, err
+}
+
+func (s *GrpcService) ImportRawKey(ctx context.Context, args *protoeth.ImportRawKeyReq) (*protoeth.ImportRawKeyResp, error) {
+	addr, err := s.PersonalAccountAPI.ImportRawKey(args.Key, args.Password)
+	if err != nil {
+		if err == keystore.ErrAccountAlreadyExists {
+			return &protoeth.ImportRawKeyResp{}, nil
+		}
+		return nil, err
+	}
+
+	return &protoeth.ImportRawKeyResp{
+		Address: addr.Hex(),
+	}, nil
+}
+
+func (s *GrpcService) SendTransaction(ctx context.Context, args *protoeth.TransactionReq) (*protoeth.TransactionResp, error) {
+
+	bdata, err := json.Marshal(args)
+	if err != nil {
+		return nil, err
+	}
+	var req ethapi.TransactionArgs
+	err = json.Unmarshal(bdata, &req)
+	if err != nil {
+		return nil, err
+	}
+	gasPrice, err := s.EthereumAPI.GasPrice(ctx)
+	if err != nil {
+		return nil, err
+	}
+	nonce, err := s.TransactionAPI.GetTransactionCount(ctx, *req.From, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber))
+	if err != nil {
+		return nil, err
+	}
+	req.Nonce = nonce
+	req.ChainID = s.BlockChainAPI.ChainId()
+	req.GasPrice = gasPrice
+	//s.BlockChainAPI.ChainId()
+
+	hash, err := s.TransactionAPI.SendTransaction(ctx, req)
+
+	return &protoeth.TransactionResp{
+		TxHash: hash.String(),
+	}, err
+}
