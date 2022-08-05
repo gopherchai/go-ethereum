@@ -22,6 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RpcApiClient interface {
+	Call(ctx context.Context, in *TransactionReq, opts ...grpc.CallOption) (*CallResp, error)
+	GetTransactionReceipt(ctx context.Context, in *GetTransactionReceiptReq, opts ...grpc.CallOption) (*GetTransactionReceiptResp, error)
 	StartMining(ctx context.Context, in *StartMiningReq, opts ...grpc.CallOption) (*StartMiningResp, error)
 	StopMining(ctx context.Context, in *StopMiningReq, opts ...grpc.CallOption) (*StopMiningResp, error)
 	SetEtherbase(ctx context.Context, in *SetEtherbaseReq, opts ...grpc.CallOption) (*SetEtherBaseResp, error)
@@ -40,6 +42,24 @@ type rpcApiClient struct {
 
 func NewRpcApiClient(cc grpc.ClientConnInterface) RpcApiClient {
 	return &rpcApiClient{cc}
+}
+
+func (c *rpcApiClient) Call(ctx context.Context, in *TransactionReq, opts ...grpc.CallOption) (*CallResp, error) {
+	out := new(CallResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/call", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) GetTransactionReceipt(ctx context.Context, in *GetTransactionReceiptReq, opts ...grpc.CallOption) (*GetTransactionReceiptResp, error) {
+	out := new(GetTransactionReceiptResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/getTransactionReceipt", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *rpcApiClient) StartMining(ctx context.Context, in *StartMiningReq, opts ...grpc.CallOption) (*StartMiningResp, error) {
@@ -159,6 +179,8 @@ func (c *rpcApiClient) SendTransaction(ctx context.Context, in *TransactionReq, 
 // All implementations must embed UnimplementedRpcApiServer
 // for forward compatibility
 type RpcApiServer interface {
+	Call(context.Context, *TransactionReq) (*CallResp, error)
+	GetTransactionReceipt(context.Context, *GetTransactionReceiptReq) (*GetTransactionReceiptResp, error)
 	StartMining(context.Context, *StartMiningReq) (*StartMiningResp, error)
 	StopMining(context.Context, *StopMiningReq) (*StopMiningResp, error)
 	SetEtherbase(context.Context, *SetEtherbaseReq) (*SetEtherBaseResp, error)
@@ -176,6 +198,12 @@ type RpcApiServer interface {
 type UnimplementedRpcApiServer struct {
 }
 
+func (UnimplementedRpcApiServer) Call(context.Context, *TransactionReq) (*CallResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
+}
+func (UnimplementedRpcApiServer) GetTransactionReceipt(context.Context, *GetTransactionReceiptReq) (*GetTransactionReceiptResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTransactionReceipt not implemented")
+}
 func (UnimplementedRpcApiServer) StartMining(context.Context, *StartMiningReq) (*StartMiningResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartMining not implemented")
 }
@@ -217,6 +245,42 @@ type UnsafeRpcApiServer interface {
 
 func RegisterRpcApiServer(s grpc.ServiceRegistrar, srv RpcApiServer) {
 	s.RegisterService(&RpcApi_ServiceDesc, srv)
+}
+
+func _RpcApi_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransactionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).Call(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/call",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).Call(ctx, req.(*TransactionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_GetTransactionReceipt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTransactionReceiptReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).GetTransactionReceipt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/getTransactionReceipt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).GetTransactionReceipt(ctx, req.(*GetTransactionReceiptReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _RpcApi_StartMining_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -409,6 +473,14 @@ var RpcApi_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "protoeth.RpcApi",
 	HandlerType: (*RpcApiServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "call",
+			Handler:    _RpcApi_Call_Handler,
+		},
+		{
+			MethodName: "getTransactionReceipt",
+			Handler:    _RpcApi_GetTransactionReceipt_Handler,
+		},
 		{
 			MethodName: "startMining",
 			Handler:    _RpcApi_StartMining_Handler,

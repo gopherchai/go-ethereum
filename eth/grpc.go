@@ -80,6 +80,19 @@ func NewGrpcService(node *node.Node, e *Ethereum, bkd ethapi.Backend) *GrpcServi
 
 }
 
+func (s *GrpcService) GetTransactionReceipt(ctx context.Context, req *protoeth.GetTransactionReceiptReq) (*protoeth.GetTransactionReceiptResp, error) {
+
+	res, err := s.TransactionAPI.GetTransactionReceipt(ctx, common.HexToHash(req.Hash))
+	if err != nil {
+		return nil, err
+	}
+	bdata, err := json.Marshal(res)
+
+	return &protoeth.GetTransactionReceiptResp{
+		Map: string(bdata),
+	}, err
+}
+
 func (s *GrpcService) GetBlockNumber(ctx context.Context, args *protoeth.GetBlockNumberReq) (*protoeth.GetBlockNumberResp, error) {
 	hight := s.BlockChainAPI.BlockNumber()
 	return &protoeth.GetBlockNumberResp{
@@ -260,5 +273,22 @@ func (s *GrpcService) SendTransaction(ctx context.Context, args *protoeth.Transa
 
 	return &protoeth.TransactionResp{
 		TxHash: hash.String(),
+	}, err
+}
+
+func (s *GrpcService) Call(ctx context.Context, args *protoeth.TransactionReq) (*protoeth.CallResp, error) {
+	var req = ethapi.TransactionArgs{}
+	bdata, err := json.Marshal(args)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(bdata, &req)
+	if err != nil {
+		panic(err)
+	}
+	data, err := s.BlockChainAPI.Call(context.TODO(), req, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber), nil)
+
+	return &protoeth.CallResp{
+		Data: data.String(),
 	}, err
 }

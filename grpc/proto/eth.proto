@@ -3,15 +3,10 @@ package protoeth;
 import "google/protobuf/struct.proto";
 option go_package = "./protoeth";
 
-// import "google/protobuf/empty.proto";
-
 message HashStringOrNumber {
   string hash = 1;
   uint64 num = 2;
 }
-
-// curl -X POST -H "Content-Type: application/json" http://localhost:8545 --data
-// '{"jsonrpc": "2.0", "id": 42, "method": "eth_accounts", "params": []}'
 
 message GetBalanceReq { string address = 1; }
 message GetBalanceResp { string balance = 1; }
@@ -91,7 +86,15 @@ message accessList {
 }
 message transactionResp { string txHash = 1; }
 
+message getTransactionReceiptReq { string hash = 1; }
+message getTransactionReceiptResp { string map = 1; }
+
+message callResp { string data = 1; }
+
 service RpcApi {
+  rpc call(transactionReq) returns (callResp);
+  rpc getTransactionReceipt(getTransactionReceiptReq)
+      returns (getTransactionReceiptResp);
   rpc startMining(startMiningReq) returns (startMiningResp);
   rpc stopMining(stopMiningReq) returns (stopMiningResp);
   rpc setEtherbase(setEtherbaseReq) returns (setEtherBaseResp);
