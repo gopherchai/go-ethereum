@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	account0 = `{"address":"17a8bdcc966016e68f8df27b85df29fafa0f6b43","crypto":{"cipher":"aes-128-ctr","ciphertext":"667e3a71c59dfe6e30da90efbf6e347ca5c854ed2685733f967e49e251acda99","cipherparams":{"iv":"7810570381616b4fb95ad7539928e820"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":4096,"p":6,"r":8,"salt":"5416614f984c774c08e6fd5b7ed7b2c33ee0d9ed09fe438f04effe305ab7cc94"},"mac":"886f1f3bc19608986e56f3e5293c0d301c3c2f21577e27cf65dbcc5c85c83102"},"id":"80b7af94-0427-44a6-bfb2-825194c7577b","version":3}`
-	address0 = common.HexToAddress(`17a8bdcc966016e68f8df27b85df29fafa0f6b43`)
+	account0 = `{"address":"d961421f8351565be929cb6283c481f83cb5ec00","crypto":{"cipher":"aes-128-ctr","ciphertext":"48faabfa50e07a0309d1c8dedb3231de5865be2a74f1d20fe14a8c35e86e2805","cipherparams":{"iv":"5a0a141042166733db3bfa2746b695e5"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":4096,"p":6,"r":8,"salt":"6d77e7042e51cd1114afd827b09b33457facd2756dcd2112bdf27a665d7c3fa2"},"mac":"fb8d7e36ee32a81c0b871cbcfc0cc641a215e3d48251f39260d67332ef9fbd45"},"id":"40a5cce3-de6a-4920-b8f2-a01efe525c3b","version":3}`
+	address0 = common.HexToAddress(`0xd961421f8351565be929cb6283c481f83cb5ec00`)
 	address2 = common.HexToAddress(`f28bba82b11d654428340e910dd602193354a2b0`)
 	address1 = common.HexToAddress(`3e09c78573e56fda7168d86bbd0e287b11ea1f00`)
 )
@@ -76,7 +76,8 @@ func main() {
 	if instance == nil {
 		panic("nil")
 	}
-	time.Sleep(time.Second * 12)
+	time.Sleep(time.Second * 2)
+	log.Println(address0.String())
 	total, err := instance.BalanceOf(&bind.CallOpts{
 		Pending:     false,
 		From:        address0,
