@@ -85,6 +85,7 @@ func main() {
 	if err != nil {
 		//出现execution reverted报错，需要进一步研究
 		//追踪到core/vm/interpreter.go:141行文件中
+		//可能是智能合约有问题，也可能是别的问题
 		log.Fatalf("%+v", err)
 	}
 	log.Println("total:", total.Int64())
