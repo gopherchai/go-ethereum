@@ -33,7 +33,7 @@ func TestUSDTCaller_BalanceOf(t *testing.T) {
 			fields: fields{
 				
 			},
-		}
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

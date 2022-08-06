@@ -282,56 +282,65 @@ func TestNewFilter(t *testing.T) {
 	}
 }
 
+func Sleep80() {
+	time.Sleep(time.Second * 1)
+}
 func TestUSDTDeployContract(t *testing.T) {
 	setup(t)
+	address0Str := `0xb2ee83f15150a54f18a01f220c7fc9d6e4ac51d0`
 	_, err := client.UnlockAccount(ctx, &pb.UnlockAccountReq{
-		Address: address1.String(),
+		Address: address0Str,
 	})
-	require.Nil(t, err)
-	bin := usdt.USDTBin
-	usdtabi, err := usdt.USDTMetaData.GetAbi()
+	address0 := common.HexToAddress(address0Str)
+	require.Nil(t, err, grpc.ErrorDesc(err))
+	bin := usdt.UsdtBin
+	usdtabi, err := usdt.UsdtMetaData.GetAbi()
 	require.Nil(t, err)
 	params := make([]interface{}, 0, 0)
-	params = append(params, big.NewInt(1000000000000000000), "USDT", uint8(3), "usdtsymbol")
+
+	params = append(params, big.NewInt(1000000000000000010), "USDT", "usdtsymbol", big.NewInt(4))
 
 	input, err := usdtabi.Pack("", params...)
 	require.Nil(t, err)
 	input = append(common.FromHex(bin), input...)
 
-	gas := hexutil.Uint64(uint64(941918))
-	//mfpg := hexutil.Big(*big.NewInt(int64(100)))
-	v := hexutil.Big(*big.NewInt(int64(394190986)))
-
 	binput := hexutil.Bytes(input)
+	t.Log("get input", binput.String())
+	gas := hexutil.Uint64(uint64(2604788 * 2))
+	//mfpg := hexutil.Big(*big.NewInt(int64(100)))
+	//v := hexutil.Big(*big.NewInt(int64(39419099986)))
+
 	req := ethapi.TransactionArgs{
-		From:                 &address1,
+		From:                 &address0,
 		To:                   nil,
 		Gas:                  &gas,
 		GasPrice:             nil,
 		MaxFeePerGas:         nil,
 		MaxPriorityFeePerGas: nil,
-		Value:                &v,
+		Value:                nil,
 		Nonce:                nil,
-		Data:                 nil,
-		Input:                &binput,
-		AccessList:           nil,
-		ChainID:              nil,
+		Data:                 &binput,
+		//	Input:      &input1,
+		AccessList: nil,
+		ChainID:    nil,
 	}
 	arg := pb.TransactionReq{}
 	structToPb(t, req, &arg)
+	require.Equal(t, req.Data.String(), arg.Data)
 	bdata, err := json.Marshal(req)
 	assert.Nil(t, err)
 
 	err = json.Unmarshal(bdata, &arg)
 	assert.Nil(t, err)
-	time.Sleep(time.Second * 8)
+	Sleep80()
+	//需要追踪rpc的sendTransaction与grpc的实现的差异
 	resp, err := client.SendTransaction(ctx, &arg)
 
 	assert.Nil(t, err, grpc.ErrorDesc(err))
 
 	assert.NotNil(t, resp)
-	t.Errorf("get resp:%s", resp.TxHash)
-	time.Sleep(time.Second * 5)
+	t.Errorf("get11 ressp:%s", resp.TxHash)
+	Sleep80()
 
 	res, err := client.GetTransactionReceipt(ctx, &pb.GetTransactionReceiptReq{
 		Hash: resp.TxHash,
@@ -349,15 +358,17 @@ func TestUSDTDeployContract(t *testing.T) {
 	require.Nil(t, err)
 
 	req = ethapi.TransactionArgs{
-		From:  &address1,
-		To:    &contractAddr,
-		Gas:   &gas,
+		From: &address0,
+		To:   &contractAddr,
+		Gas:  &gas,
+		//Value: (*hexutil.Big)(big.NewInt(3)),
 		Input: &binput,
+		Data:  &binput,
 	}
 
 	arg.Reset()
 	structToPb(t, req, &arg)
-	time.Sleep(time.Second * 8)
+	Sleep80()
 	resp, err = client.SendTransaction(ctx, &arg)
 	require.Nil(t, err)
 	t.Logf("%s", resp.TxHash)
@@ -366,17 +377,19 @@ func TestUSDTDeployContract(t *testing.T) {
 	binput, err = usdtabi.Pack("balanceOf", address1)
 	require.Nil(t, err)
 	req = ethapi.TransactionArgs{
-		From:  &address1,
+		From:  &address0,
 		To:    &contractAddr,
 		Gas:   &gas,
 		Input: &binput,
 	}
+	)
 	arg.Reset()
 	structToPb(t, req, &arg)
-	time.Sleep(time.Second * 8)
+	Sleep80()
 	t.Logf("%+v", arg)
 	callRes, err = client.Call(ctx, &arg)
-	require.Nil(t, err)
+	assert.Nil(t, callRes)
+	require.Nil(t, err, grpc.ErrorDesc(err))
 	var out []interface{}
 	t.Logf("%s", callRes.Data)
 	bs := new(hexutil.Bytes)
@@ -392,7 +405,7 @@ func TestUSDTDeployContract(t *testing.T) {
 	require.Equal(t, "", callRes.Data)
 	require.Equal(t, nil, out0)
 	//todo 需要再调用balanceof合约
-	time.Sleep(time.Second * 4)
+	//time.Sleep(time.Second * 4)
 }
 
 func structToPb(t *testing.T, from interface{}, to interface{}) {
@@ -430,6 +443,7 @@ func TestCmp(t *testing.T) {
 }
 
 const (
+	account0 = ``
 	account1 = `
 	{
 		"address": "f28bba82b11d654428340e910dd602193354a2b0",

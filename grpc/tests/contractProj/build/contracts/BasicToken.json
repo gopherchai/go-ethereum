@@ -30409,7 +30409,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.8",
-  "updatedAt": "2022-08-04T21:16:44.666Z",
+  "updatedAt": "2022-08-05T10:49:24.093Z",
   "devdoc": {
     "methods": {
       "balanceOf(address)": {

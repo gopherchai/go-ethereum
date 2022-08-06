@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -256,6 +257,7 @@ func (s *GrpcService) SendTransaction(ctx context.Context, args *protoeth.Transa
 	if err != nil {
 		return nil, err
 	}
+	log.Info(string(bdata))
 	gasPrice, err := s.EthereumAPI.GasPrice(ctx)
 	if err != nil {
 		return nil, err
@@ -265,8 +267,10 @@ func (s *GrpcService) SendTransaction(ctx context.Context, args *protoeth.Transa
 		return nil, err
 	}
 	req.Nonce = nonce
-	req.ChainID = s.BlockChainAPI.ChainId()
+	//req.ChainID = s.BlockChainAPI.ChainId()
 	req.GasPrice = gasPrice
+	msg := fmt.Sprintf("unmarshal tx rags :%+v", req)
+	log.Info(msg)
 	//s.BlockChainAPI.ChainId()
 
 	hash, err := s.TransactionAPI.SendTransaction(ctx, req)
@@ -277,6 +281,7 @@ func (s *GrpcService) SendTransaction(ctx context.Context, args *protoeth.Transa
 }
 
 func (s *GrpcService) Call(ctx context.Context, args *protoeth.TransactionReq) (*protoeth.CallResp, error) {
+
 	var req = ethapi.TransactionArgs{}
 	bdata, err := json.Marshal(args)
 	if err != nil {
@@ -286,8 +291,14 @@ func (s *GrpcService) Call(ctx context.Context, args *protoeth.TransactionReq) (
 	if err != nil {
 		panic(err)
 	}
-	data, err := s.BlockChainAPI.Call(context.TODO(), req, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber), nil)
+	//TODO 如果调用的是智能合约，需要在结合合约生成
+	//	override := make(ethapi.StateOverride)
+	//account := new(ethapi.OverrideAccount)
 
+	data, err := s.BlockChainAPI.Call(ctx, req, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber), nil)
+	if err != nil {
+
+	}
 	return &protoeth.CallResp{
 		Data: data.String(),
 	}, err
