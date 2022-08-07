@@ -399,7 +399,7 @@ func TestUSDTDeployContract(t *testing.T) {
 	outs, err := usdtabi.Unpack("balanceOf", []byte(callRes.Data))
 	require.Nil(t, err)
 	out0 := *abi.ConvertType(outs[0], new(*big.Int)).(**big.Int)
-	require.Equal(t, nil, out0)
+	require.Equal(t, 0, out0.Cmp(big.NewInt(1000)))
 	//todo 需要再调用balanceof合约
 	//time.Sleep(time.Second * 4)
 }
