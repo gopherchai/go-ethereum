@@ -285,7 +285,7 @@ func TestNewFilter(t *testing.T) {
 func Sleep80() {
 	time.Sleep(time.Second * 1)
 }
-func TestUSDTDeployContract(t *testing.T) {
+func TestUSDTDeployAndCallContract(t *testing.T) {
 	setup(t)
 	address0Str := `0x8ab3a8a9205fb6c279c973f08b36f989afbd68ad`
 	_, err := client.UnlockAccount(ctx, &pb.UnlockAccountReq{
