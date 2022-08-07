@@ -287,7 +287,7 @@ func Sleep80() {
 }
 func TestUSDTDeployContract(t *testing.T) {
 	setup(t)
-	address0Str := `0xb2ee83f15150a54f18a01f220c7fc9d6e4ac51d0`
+	address0Str := `0x8ab3a8a9205fb6c279c973f08b36f989afbd68ad`
 	_, err := client.UnlockAccount(ctx, &pb.UnlockAccountReq{
 		Address: address0Str,
 	})
@@ -354,7 +354,7 @@ func TestUSDTDeployContract(t *testing.T) {
 
 	contractAddr := m.ContractAddress
 
-	binput, err = usdtabi.Pack("transfer", address2, big.NewInt(1000))
+	binput, err = usdtabi.Pack("transfer", address1, big.NewInt(1000))
 	require.Nil(t, err)
 
 	req = ethapi.TransactionArgs{
@@ -382,7 +382,6 @@ func TestUSDTDeployContract(t *testing.T) {
 		Gas:   &gas,
 		Input: &binput,
 	}
-	)
 	arg.Reset()
 	structToPb(t, req, &arg)
 	Sleep80()
@@ -390,19 +389,16 @@ func TestUSDTDeployContract(t *testing.T) {
 	callRes, err = client.Call(ctx, &arg)
 	assert.Nil(t, callRes)
 	require.Nil(t, err, grpc.ErrorDesc(err))
-	var out []interface{}
-	t.Logf("%s", callRes.Data)
-	bs := new(hexutil.Bytes)
-	err = bs.UnmarshalJSON([]byte(callRes.Data))
-	require.Nil(t, err)
-	num, err := hexutil.DecodeBig(callRes.Data)
-	require.Nil(t, err)
-	require.Equal(t, 0, num.Cmp(big.NewInt(0)))
-	err = json.Unmarshal([]byte(callRes.Data), &out)
-	require.Nil(t, err)
 
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-	require.Equal(t, "", callRes.Data)
+	t.Logf("%s", callRes.Data)
+	num := big.NewInt(0)
+	err = num.UnmarshalText([]byte(callRes.Data))
+	require.Nil(t, err)
+	require.Equal(t, 1, num.Cmp(big.NewInt(0)))
+
+	outs, err := usdtabi.Unpack("balanceOf", []byte(callRes.Data))
+	require.Nil(t, err)
+	out0 := *abi.ConvertType(outs[0], new(*big.Int)).(**big.Int)
 	require.Equal(t, nil, out0)
 	//todo 需要再调用balanceof合约
 	//time.Sleep(time.Second * 4)
@@ -443,7 +439,7 @@ func TestCmp(t *testing.T) {
 }
 
 const (
-	account0 = ``
+	account0 = `{"address":"8ab3a8a9205fb6c279c973f08b36f989afbd68ad","crypto":{"cipher":"aes-128-ctr","ciphertext":"9470422e84cf766cb0d4041f0b8672e74a64fba936eb2d4519c531db8a003a1e","cipherparams":{"iv":"e26071fab78f650ddee207e413f2f25b"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":4096,"p":6,"r":8,"salt":"998501be68e21cb12e6a7c861723b0b99c95d614962cf7c27cdb986386543b39"},"mac":"35f473c14a119264433722f6a44b4c1b8d044d704ba5245a212ea6cff3b80d1c"},"id":"f8eafc21-755a-4c8a-8c3c-0538e2d3be6d","version":3}`
 	account1 = `
 	{
 		"address": "f28bba82b11d654428340e910dd602193354a2b0",

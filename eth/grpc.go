@@ -300,6 +300,6 @@ func (s *GrpcService) Call(ctx context.Context, args *protoeth.TransactionReq) (
 
 	}
 	return &protoeth.CallResp{
-		Data: data.String(),
+		Data: string(data),
 	}, err
 }

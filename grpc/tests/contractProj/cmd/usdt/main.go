@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	account0 = `{"address":"d961421f8351565be929cb6283c481f83cb5ec00","crypto":{"cipher":"aes-128-ctr","ciphertext":"48faabfa50e07a0309d1c8dedb3231de5865be2a74f1d20fe14a8c35e86e2805","cipherparams":{"iv":"5a0a141042166733db3bfa2746b695e5"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":4096,"p":6,"r":8,"salt":"6d77e7042e51cd1114afd827b09b33457facd2756dcd2112bdf27a665d7c3fa2"},"mac":"fb8d7e36ee32a81c0b871cbcfc0cc641a215e3d48251f39260d67332ef9fbd45"},"id":"40a5cce3-de6a-4920-b8f2-a01efe525c3b","version":3}`
-	address0 = common.HexToAddress(`0xd961421f8351565be929cb6283c481f83cb5ec00`)
+	account0 = `{"address":"8ab3a8a9205fb6c279c973f08b36f989afbd68ad","crypto":{"cipher":"aes-128-ctr","ciphertext":"9470422e84cf766cb0d4041f0b8672e74a64fba936eb2d4519c531db8a003a1e","cipherparams":{"iv":"e26071fab78f650ddee207e413f2f25b"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":4096,"p":6,"r":8,"salt":"998501be68e21cb12e6a7c861723b0b99c95d614962cf7c27cdb986386543b39"},"mac":"35f473c14a119264433722f6a44b4c1b8d044d704ba5245a212ea6cff3b80d1c"},"id":"f8eafc21-755a-4c8a-8c3c-0538e2d3be6d","version":3}`
+	address0 = common.HexToAddress(`8ab3a8a9205fb6c279c973f08b36f989afbd68ad`)
 	address2 = common.HexToAddress(`f28bba82b11d654428340e910dd602193354a2b0`)
 	address1 = common.HexToAddress(`3e09c78573e56fda7168d86bbd0e287b11ea1f00`)
 )
@@ -78,6 +78,20 @@ func main() {
 	}
 	time.Sleep(time.Second * 2)
 	log.Println(address0.String())
+	log.Println(address1.String())
+
+	tx, err = instance.Transfer(&bind.TransactOpts{
+		From: address0,
+		//GasTipCap: big.NewInt(52),
+		GasFeeCap: big.NewInt(699086302),
+		//GasPrice: big.NewInt(100),
+	}, address1, big.NewInt(200))
+
+	if err != nil {
+		log.Fatalf("%+v", err)
+	}
+	log.Println(tx.Hash())
+
 	total, err := instance.BalanceOf(&bind.CallOpts{
 		Pending:     false,
 		From:        address0,
@@ -91,16 +105,6 @@ func main() {
 	}
 	log.Println("total:", total.Int64())
 
-	tx, err = instance.Transfer(&bind.TransactOpts{
-		From: address0,
-		//GasTipCap: big.NewInt(52),
-		GasFeeCap: big.NewInt(659086302),
-		//GasPrice: big.NewInt(100),
-	}, address1, big.NewInt(200))
-	if err != nil {
-		log.Fatalf("%+v", err)
-	}
-	log.Println(tx.Hash())
 	num, _ := client.BlockNumber(context.TODO())
 	supply, err := instance.TotalSupply(&bind.CallOpts{
 		From:        fromAddress,
