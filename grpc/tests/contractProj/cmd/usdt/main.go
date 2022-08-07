@@ -118,4 +118,5 @@ func main() {
 	}
 
 	log.Println(supply)
+
 }

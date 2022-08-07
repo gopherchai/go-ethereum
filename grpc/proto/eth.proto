@@ -90,8 +90,31 @@ message getTransactionReceiptReq { string hash = 1; }
 message getTransactionReceiptResp { string map = 1; }
 
 message callResp { string data = 1; }
+message codeAtReq {
+  string contract = 1;
+  string blockNumber = 2;
+}
+message codeAtResp { string data = 2; }
+message callMsg {
+  string from = 1;
+  string to = 2;
+  uint64 gas = 3;
+  string gasPrice = 4;
+  string gasFeeCap = 5;
+  string gasTipCap = 6;
+  string value = 7;
+  bytes data = 8;
+  repeated accessList accessList = 12;
+}
+
+message callContractReq {
+  callMsg call = 1;
+  uint64 blockNumber = 2;
+}
 
 service RpcApi {
+  rpc callContract(callContractReq) returns (callResp);
+  rpc codeAt(codeAtReq) returns (codeAtResp);
   rpc call(transactionReq) returns (callResp);
   rpc getTransactionReceipt(getTransactionReceiptReq)
       returns (getTransactionReceiptResp);
