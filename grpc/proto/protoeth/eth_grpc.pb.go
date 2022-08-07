@@ -18,10 +18,436 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
+// ContractTransactorClient is the client API for ContractTransactor service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ContractTransactorClient interface {
+	HeaderByNumber(ctx context.Context, in *HeaderByNumbeReq, opts ...grpc.CallOption) (*HeaderResp, error)
+	PendingCodeAt(ctx context.Context, in *PendingCodeAtReq, opts ...grpc.CallOption) (*PendingCodeAtResp, error)
+	PendingNonceAt(ctx context.Context, in *PengdingNonceAtReq, opts ...grpc.CallOption) (*PengdingNonceAtResp, error)
+	SuggestGasPrice(ctx context.Context, in *SuggestGasPriceReq, opts ...grpc.CallOption) (*SuggestGasPriceResp, error)
+	SuggestGasTipCap(ctx context.Context, in *SuggestGasTipCapReq, opts ...grpc.CallOption) (*SuggestGasTipCapResp, error)
+	EstimateGas(ctx context.Context, in *EstimateGasReq, opts ...grpc.CallOption) (*EstimateGasResp, error)
+	SendRawTransaction(ctx context.Context, in *SendRawTransactionReq, opts ...grpc.CallOption) (*SendRawTransactionResp, error)
+}
+
+type contractTransactorClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewContractTransactorClient(cc grpc.ClientConnInterface) ContractTransactorClient {
+	return &contractTransactorClient{cc}
+}
+
+func (c *contractTransactorClient) HeaderByNumber(ctx context.Context, in *HeaderByNumbeReq, opts ...grpc.CallOption) (*HeaderResp, error) {
+	out := new(HeaderResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractTransactor/HeaderByNumber", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractTransactorClient) PendingCodeAt(ctx context.Context, in *PendingCodeAtReq, opts ...grpc.CallOption) (*PendingCodeAtResp, error) {
+	out := new(PendingCodeAtResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractTransactor/PendingCodeAt", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractTransactorClient) PendingNonceAt(ctx context.Context, in *PengdingNonceAtReq, opts ...grpc.CallOption) (*PengdingNonceAtResp, error) {
+	out := new(PengdingNonceAtResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractTransactor/PendingNonceAt", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractTransactorClient) SuggestGasPrice(ctx context.Context, in *SuggestGasPriceReq, opts ...grpc.CallOption) (*SuggestGasPriceResp, error) {
+	out := new(SuggestGasPriceResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractTransactor/SuggestGasPrice", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractTransactorClient) SuggestGasTipCap(ctx context.Context, in *SuggestGasTipCapReq, opts ...grpc.CallOption) (*SuggestGasTipCapResp, error) {
+	out := new(SuggestGasTipCapResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractTransactor/SuggestGasTipCap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractTransactorClient) EstimateGas(ctx context.Context, in *EstimateGasReq, opts ...grpc.CallOption) (*EstimateGasResp, error) {
+	out := new(EstimateGasResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractTransactor/EstimateGas", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractTransactorClient) SendRawTransaction(ctx context.Context, in *SendRawTransactionReq, opts ...grpc.CallOption) (*SendRawTransactionResp, error) {
+	out := new(SendRawTransactionResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractTransactor/SendRawTransaction", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ContractTransactorServer is the server API for ContractTransactor service.
+// All implementations must embed UnimplementedContractTransactorServer
+// for forward compatibility
+type ContractTransactorServer interface {
+	HeaderByNumber(context.Context, *HeaderByNumbeReq) (*HeaderResp, error)
+	PendingCodeAt(context.Context, *PendingCodeAtReq) (*PendingCodeAtResp, error)
+	PendingNonceAt(context.Context, *PengdingNonceAtReq) (*PengdingNonceAtResp, error)
+	SuggestGasPrice(context.Context, *SuggestGasPriceReq) (*SuggestGasPriceResp, error)
+	SuggestGasTipCap(context.Context, *SuggestGasTipCapReq) (*SuggestGasTipCapResp, error)
+	EstimateGas(context.Context, *EstimateGasReq) (*EstimateGasResp, error)
+	SendRawTransaction(context.Context, *SendRawTransactionReq) (*SendRawTransactionResp, error)
+	mustEmbedUnimplementedContractTransactorServer()
+}
+
+// UnimplementedContractTransactorServer must be embedded to have forward compatible implementations.
+type UnimplementedContractTransactorServer struct {
+}
+
+func (UnimplementedContractTransactorServer) HeaderByNumber(context.Context, *HeaderByNumbeReq) (*HeaderResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HeaderByNumber not implemented")
+}
+func (UnimplementedContractTransactorServer) PendingCodeAt(context.Context, *PendingCodeAtReq) (*PendingCodeAtResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingCodeAt not implemented")
+}
+func (UnimplementedContractTransactorServer) PendingNonceAt(context.Context, *PengdingNonceAtReq) (*PengdingNonceAtResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingNonceAt not implemented")
+}
+func (UnimplementedContractTransactorServer) SuggestGasPrice(context.Context, *SuggestGasPriceReq) (*SuggestGasPriceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SuggestGasPrice not implemented")
+}
+func (UnimplementedContractTransactorServer) SuggestGasTipCap(context.Context, *SuggestGasTipCapReq) (*SuggestGasTipCapResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SuggestGasTipCap not implemented")
+}
+func (UnimplementedContractTransactorServer) EstimateGas(context.Context, *EstimateGasReq) (*EstimateGasResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EstimateGas not implemented")
+}
+func (UnimplementedContractTransactorServer) SendRawTransaction(context.Context, *SendRawTransactionReq) (*SendRawTransactionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendRawTransaction not implemented")
+}
+func (UnimplementedContractTransactorServer) mustEmbedUnimplementedContractTransactorServer() {}
+
+// UnsafeContractTransactorServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ContractTransactorServer will
+// result in compilation errors.
+type UnsafeContractTransactorServer interface {
+	mustEmbedUnimplementedContractTransactorServer()
+}
+
+func RegisterContractTransactorServer(s grpc.ServiceRegistrar, srv ContractTransactorServer) {
+	s.RegisterService(&ContractTransactor_ServiceDesc, srv)
+}
+
+func _ContractTransactor_HeaderByNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HeaderByNumbeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractTransactorServer).HeaderByNumber(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractTransactor/HeaderByNumber",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractTransactorServer).HeaderByNumber(ctx, req.(*HeaderByNumbeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractTransactor_PendingCodeAt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PendingCodeAtReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractTransactorServer).PendingCodeAt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractTransactor/PendingCodeAt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractTransactorServer).PendingCodeAt(ctx, req.(*PendingCodeAtReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractTransactor_PendingNonceAt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PengdingNonceAtReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractTransactorServer).PendingNonceAt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractTransactor/PendingNonceAt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractTransactorServer).PendingNonceAt(ctx, req.(*PengdingNonceAtReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractTransactor_SuggestGasPrice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SuggestGasPriceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractTransactorServer).SuggestGasPrice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractTransactor/SuggestGasPrice",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractTransactorServer).SuggestGasPrice(ctx, req.(*SuggestGasPriceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractTransactor_SuggestGasTipCap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SuggestGasTipCapReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractTransactorServer).SuggestGasTipCap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractTransactor/SuggestGasTipCap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractTransactorServer).SuggestGasTipCap(ctx, req.(*SuggestGasTipCapReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractTransactor_EstimateGas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EstimateGasReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractTransactorServer).EstimateGas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractTransactor/EstimateGas",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractTransactorServer).EstimateGas(ctx, req.(*EstimateGasReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractTransactor_SendRawTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendRawTransactionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractTransactorServer).SendRawTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractTransactor/SendRawTransaction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractTransactorServer).SendRawTransaction(ctx, req.(*SendRawTransactionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ContractTransactor_ServiceDesc is the grpc.ServiceDesc for ContractTransactor service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ContractTransactor_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "protoeth.ContractTransactor",
+	HandlerType: (*ContractTransactorServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "HeaderByNumber",
+			Handler:    _ContractTransactor_HeaderByNumber_Handler,
+		},
+		{
+			MethodName: "PendingCodeAt",
+			Handler:    _ContractTransactor_PendingCodeAt_Handler,
+		},
+		{
+			MethodName: "PendingNonceAt",
+			Handler:    _ContractTransactor_PendingNonceAt_Handler,
+		},
+		{
+			MethodName: "SuggestGasPrice",
+			Handler:    _ContractTransactor_SuggestGasPrice_Handler,
+		},
+		{
+			MethodName: "SuggestGasTipCap",
+			Handler:    _ContractTransactor_SuggestGasTipCap_Handler,
+		},
+		{
+			MethodName: "EstimateGas",
+			Handler:    _ContractTransactor_EstimateGas_Handler,
+		},
+		{
+			MethodName: "SendRawTransaction",
+			Handler:    _ContractTransactor_SendRawTransaction_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "eth.proto",
+}
+
+// ContractFilterClient is the client API for ContractFilter service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ContractFilterClient interface {
+	FilterLogs(ctx context.Context, in *FilterLogsReq, opts ...grpc.CallOption) (*FilterLogsResp, error)
+	SubscribeFilterLogs(ctx context.Context, in *SubscribeFilterLogsReq, opts ...grpc.CallOption) (*SubscribeFilterLogsResp, error)
+}
+
+type contractFilterClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewContractFilterClient(cc grpc.ClientConnInterface) ContractFilterClient {
+	return &contractFilterClient{cc}
+}
+
+func (c *contractFilterClient) FilterLogs(ctx context.Context, in *FilterLogsReq, opts ...grpc.CallOption) (*FilterLogsResp, error) {
+	out := new(FilterLogsResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractFilter/FilterLogs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractFilterClient) SubscribeFilterLogs(ctx context.Context, in *SubscribeFilterLogsReq, opts ...grpc.CallOption) (*SubscribeFilterLogsResp, error) {
+	out := new(SubscribeFilterLogsResp)
+	err := c.cc.Invoke(ctx, "/protoeth.ContractFilter/SubscribeFilterLogs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ContractFilterServer is the server API for ContractFilter service.
+// All implementations must embed UnimplementedContractFilterServer
+// for forward compatibility
+type ContractFilterServer interface {
+	FilterLogs(context.Context, *FilterLogsReq) (*FilterLogsResp, error)
+	SubscribeFilterLogs(context.Context, *SubscribeFilterLogsReq) (*SubscribeFilterLogsResp, error)
+	mustEmbedUnimplementedContractFilterServer()
+}
+
+// UnimplementedContractFilterServer must be embedded to have forward compatible implementations.
+type UnimplementedContractFilterServer struct {
+}
+
+func (UnimplementedContractFilterServer) FilterLogs(context.Context, *FilterLogsReq) (*FilterLogsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FilterLogs not implemented")
+}
+func (UnimplementedContractFilterServer) SubscribeFilterLogs(context.Context, *SubscribeFilterLogsReq) (*SubscribeFilterLogsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubscribeFilterLogs not implemented")
+}
+func (UnimplementedContractFilterServer) mustEmbedUnimplementedContractFilterServer() {}
+
+// UnsafeContractFilterServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ContractFilterServer will
+// result in compilation errors.
+type UnsafeContractFilterServer interface {
+	mustEmbedUnimplementedContractFilterServer()
+}
+
+func RegisterContractFilterServer(s grpc.ServiceRegistrar, srv ContractFilterServer) {
+	s.RegisterService(&ContractFilter_ServiceDesc, srv)
+}
+
+func _ContractFilter_FilterLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilterLogsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractFilterServer).FilterLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractFilter/FilterLogs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractFilterServer).FilterLogs(ctx, req.(*FilterLogsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractFilter_SubscribeFilterLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubscribeFilterLogsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractFilterServer).SubscribeFilterLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.ContractFilter/SubscribeFilterLogs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractFilterServer).SubscribeFilterLogs(ctx, req.(*SubscribeFilterLogsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ContractFilter_ServiceDesc is the grpc.ServiceDesc for ContractFilter service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ContractFilter_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "protoeth.ContractFilter",
+	HandlerType: (*ContractFilterServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "FilterLogs",
+			Handler:    _ContractFilter_FilterLogs_Handler,
+		},
+		{
+			MethodName: "SubscribeFilterLogs",
+			Handler:    _ContractFilter_SubscribeFilterLogs_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "eth.proto",
+}
+
 // RpcApiClient is the client API for RpcApi service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RpcApiClient interface {
+	CallContract(ctx context.Context, in *CallContractReq, opts ...grpc.CallOption) (*CallContractResp, error)
+	CodeAt(ctx context.Context, in *CodeAtReq, opts ...grpc.CallOption) (*CodeAtResp, error)
 	Call(ctx context.Context, in *TransactionReq, opts ...grpc.CallOption) (*CallResp, error)
 	GetTransactionReceipt(ctx context.Context, in *GetTransactionReceiptReq, opts ...grpc.CallOption) (*GetTransactionReceiptResp, error)
 	StartMining(ctx context.Context, in *StartMiningReq, opts ...grpc.CallOption) (*StartMiningResp, error)
@@ -42,6 +468,24 @@ type rpcApiClient struct {
 
 func NewRpcApiClient(cc grpc.ClientConnInterface) RpcApiClient {
 	return &rpcApiClient{cc}
+}
+
+func (c *rpcApiClient) CallContract(ctx context.Context, in *CallContractReq, opts ...grpc.CallOption) (*CallContractResp, error) {
+	out := new(CallContractResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/callContract", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rpcApiClient) CodeAt(ctx context.Context, in *CodeAtReq, opts ...grpc.CallOption) (*CodeAtResp, error) {
+	out := new(CodeAtResp)
+	err := c.cc.Invoke(ctx, "/protoeth.RpcApi/codeAt", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *rpcApiClient) Call(ctx context.Context, in *TransactionReq, opts ...grpc.CallOption) (*CallResp, error) {
@@ -179,6 +623,8 @@ func (c *rpcApiClient) SendTransaction(ctx context.Context, in *TransactionReq, 
 // All implementations must embed UnimplementedRpcApiServer
 // for forward compatibility
 type RpcApiServer interface {
+	CallContract(context.Context, *CallContractReq) (*CallContractResp, error)
+	CodeAt(context.Context, *CodeAtReq) (*CodeAtResp, error)
 	Call(context.Context, *TransactionReq) (*CallResp, error)
 	GetTransactionReceipt(context.Context, *GetTransactionReceiptReq) (*GetTransactionReceiptResp, error)
 	StartMining(context.Context, *StartMiningReq) (*StartMiningResp, error)
@@ -198,6 +644,12 @@ type RpcApiServer interface {
 type UnimplementedRpcApiServer struct {
 }
 
+func (UnimplementedRpcApiServer) CallContract(context.Context, *CallContractReq) (*CallContractResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CallContract not implemented")
+}
+func (UnimplementedRpcApiServer) CodeAt(context.Context, *CodeAtReq) (*CodeAtResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CodeAt not implemented")
+}
 func (UnimplementedRpcApiServer) Call(context.Context, *TransactionReq) (*CallResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
 }
@@ -245,6 +697,42 @@ type UnsafeRpcApiServer interface {
 
 func RegisterRpcApiServer(s grpc.ServiceRegistrar, srv RpcApiServer) {
 	s.RegisterService(&RpcApi_ServiceDesc, srv)
+}
+
+func _RpcApi_CallContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallContractReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).CallContract(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/callContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).CallContract(ctx, req.(*CallContractReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RpcApi_CodeAt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CodeAtReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RpcApiServer).CodeAt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protoeth.RpcApi/codeAt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RpcApiServer).CodeAt(ctx, req.(*CodeAtReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _RpcApi_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -473,6 +961,14 @@ var RpcApi_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "protoeth.RpcApi",
 	HandlerType: (*RpcApiServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "callContract",
+			Handler:    _RpcApi_CallContract_Handler,
+		},
+		{
+			MethodName: "codeAt",
+			Handler:    _RpcApi_CodeAt_Handler,
+		},
 		{
 			MethodName: "call",
 			Handler:    _RpcApi_Call_Handler,

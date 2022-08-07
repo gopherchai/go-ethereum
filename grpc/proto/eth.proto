@@ -112,8 +112,84 @@ message callContractReq {
   uint64 blockNumber = 2;
 }
 
+message callContractResp { string data = 1; }
+
+message pendingCodeAtReq { string address = 1; }
+message pendingCodeAtResp { string data = 2; }
+
+message pendingCallContractReq { callMsg callMsg = 1; };
+message pendingCallContractResp { string data = 1; }
+
+service ContractTransactor {
+  rpc HeaderByNumber(headerByNumbeReq) returns (headerResp);
+  rpc PendingCodeAt(pendingCodeAtReq) returns (pendingCodeAtResp);
+  rpc PendingNonceAt(pengdingNonceAtReq) returns (pengdingNonceAtResp);
+  rpc SuggestGasPrice(suggestGasPriceReq) returns (suggestGasPriceResp);
+  rpc SuggestGasTipCap(suggestGasTipCapReq) returns (suggestGasTipCapResp);
+  rpc EstimateGas(estimateGasReq) returns (estimateGasResp);
+  rpc SendRawTransaction(sendRawTransactionReq)
+      returns (sendRawTransactionResp);
+}
+
+message headerByNumbeReq { uint64 number = 1; }
+message headerResp {
+  string parenthash = 1;
+  string unclehash = 2;
+  string coinbase = 3;
+  string root = 4;
+  string txHash = 5;
+  string receiptHash = 6;
+  string bloom = 7;
+  uint64 difficulty = 8;
+  uint64 number = 9;
+  uint64 gasUsed = 10;
+  uint64 time = 11;
+  bytes extra = 12;
+  string mixHash = 13;
+  string nonce = 14;
+}
+
+message pendingCodeAtAccountReq { string account = 1; }
+message pendingNonceAtAccountReq { string account = 1; }
+
+message pengdingNonceAtReq { string account = 1; }
+message pengdingNonceAtResp { uint64 nonce = 1; }
+
+message suggestGasPriceReq {}
+message suggestGasPriceResp { uint64 price = 1; }
+
+message suggestGasTipCapReq {}
+message suggestGasTipCapResp { uint64 gasTipCap = 1; }
+
+message estimateGasReq { callMsg callMsg = 1; }
+
+message estimateGasResp { uint64 gas = 1; }
+
+message sendRawTransactionReq { bytes data = 1; }
+
+message sendRawTransactionResp { string hash = 1; }
+// eth_sendRawTransaction
+
+service ContractFilter {
+  rpc FilterLogs(FilterLogsReq) returns (FilterLogsResp);
+  rpc SubscribeFilterLogs(SubscribeFilterLogsReq)
+      returns (SubscribeFilterLogsResp);
+}
+
+message FilterLogsReq { NewFilterReq query = 1; }
+
+message FilterLogsResp { repeated log logs = 1; }
+
+message SubscribeFilterLogsReq { NewFilterReq query = 1; }
+message SubscribeFilterLogsResp { repeated Subscription subs = 1; }
+
+message Subscription {
+  string ID = 1;
+  string Namespace = 2;
+}
+
 service RpcApi {
-  rpc callContract(callContractReq) returns (callResp);
+  rpc callContract(callContractReq) returns (callContractResp);
   rpc codeAt(codeAtReq) returns (codeAtResp);
   rpc call(transactionReq) returns (callResp);
   rpc getTransactionReceipt(getTransactionReceiptReq)

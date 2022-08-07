@@ -9,6 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/eth/filters"
@@ -37,6 +38,8 @@ type GrpcService struct {
 	*ethapi.EthereumAccountAPI
 	*ethapi.PersonalAccountAPI
 	protoeth.UnimplementedRpcApiServer
+	protoeth.UnimplementedContractFilterServer
+	protoeth.UnimplementedContractTransactorServer
 }
 
 func NewGrpcService(node *node.Node, e *Ethereum, bkd ethapi.Backend) *GrpcService {
@@ -136,7 +139,12 @@ func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceR
 
 func Serve(stack *node.Node, e *Ethereum, bkd ethapi.Backend) {
 	s := stack.GrpcServer()
-	protoeth.RegisterRpcApiServer(s, NewGrpcService(stack, e, bkd))
+	svr := NewGrpcService(stack, e, bkd)
+
+	protoeth.RegisterRpcApiServer(s, svr)
+	protoeth.RegisterContractFilterServer(s, svr)
+
+	protoeth.RegisterContractTransactorServer(s, svr.UnimplementedContractTransactorServer)
 	return
 }
 
@@ -285,21 +293,160 @@ func (s *GrpcService) Call(ctx context.Context, args *protoeth.TransactionReq) (
 	var req = ethapi.TransactionArgs{}
 	bdata, err := json.Marshal(args)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	err = json.Unmarshal(bdata, &req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	//TODO 如果调用的是智能合约，需要在结合合约生成
-	//	override := make(ethapi.StateOverride)
-	//account := new(ethapi.OverrideAccount)
 
 	data, err := s.BlockChainAPI.Call(ctx, req, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber), nil)
 	if err != nil {
-
+		return nil, err
 	}
 	return &protoeth.CallResp{
 		Data: string(data),
 	}, err
+}
+
+type ContractTransactor struct {
+	s *GrpcService
+}
+
+func (ct *ContractTransactor) HeaderByNumber(ctx context.Context, args *protoeth.HeaderByNumbeReq) (*protoeth.HeaderResp, error) {
+
+	res, err := ct.s.ethEthereumAPI.e.APIBackend.HeaderByNumber(ctx, rpc.BlockNumber(args.Number))
+	if err != nil {
+		return nil, err
+	}
+	reply := &protoeth.HeaderResp{}
+	err = Struct2Pb(res, reply)
+	if err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+func (ct *ContractTransactor) PendingCodeAt(ctx context.Context, args *protoeth.PendingCodeAtReq) (*protoeth.PendingCodeAtResp, error) {
+	data, err := ct.s.BlockChainAPI.GetCode(ctx, common.HexToAddress(args.Address), rpc.BlockNumberOrHashWithNumber(-2))
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.PendingCodeAtResp{
+		Data: string(data),
+	}, nil
+}
+
+func (ct *ContractTransactor) PendingNonceAt(ctx context.Context, args *protoeth.PengdingNonceAtReq) (*protoeth.PengdingNonceAtResp, error) {
+	//getTransactionCount pending
+	num, err := ct.s.TransactionAPI.GetTransactionCount(ctx, common.HexToAddress(args.Account), rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber))
+	if err != nil {
+		return nil, err
+	}
+
+	return &protoeth.PengdingNonceAtResp{
+		Nonce: hexutil.MustDecodeUint64(num.String()),
+	}, nil
+}
+
+func (ct *ContractTransactor) SuggestGasPrice(ctx context.Context, args *protoeth.SuggestGasPriceReq) (*protoeth.SuggestGasPriceResp, error) {
+	num, err := ct.s.EthereumAPI.GasPrice(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.SuggestGasPriceResp{
+		Price: num.ToInt().Uint64(),
+	}, nil
+}
+
+func (ct *ContractTransactor) SuggestGasTipCap(ctx context.Context, args *protoeth.SuggestGasTipCapReq) (*protoeth.SuggestGasPriceResp, error) {
+	num, err := ct.s.EthereumAPI.MaxPriorityFeePerGas(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.SuggestGasPriceResp{
+		Price: num.ToInt().Uint64(),
+	}, nil
+}
+func (ct *ContractTransactor) EstimateGas(ctx context.Context, args *protoeth.EstimateGasReq) (*protoeth.EstimateGasResp, error) {
+	msg := args.CallMsg
+	req := ethapi.TransactionArgs{}
+	err := Struct2Pb(msg, &req)
+	if err != nil {
+		return nil, err
+	}
+	num := rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber)
+	gas, err := ct.s.BlockChainAPI.EstimateGas(ctx, req, &num)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.EstimateGasResp{
+		Gas: uint64(gas),
+	}, nil
+}
+
+func (ct *ContractTransactor) SendRawTransaction(ctx context.Context, args *protoeth.SendRawTransactionReq) (*protoeth.SendRawTransactionResp, error) {
+
+	hash, err := ct.s.TransactionAPI.SendRawTransaction(ctx, hexutil.Bytes(args.Data))
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.SendRawTransactionResp{
+		Hash: hash.String(),
+	}, nil
+}
+
+type ContractFilter struct {
+	s *GrpcService
+}
+
+func (ctf *ContractFilter) FilterLogs(ctx context.Context, args *protoeth.FilterLogsReq) (*protoeth.FilterLogsResp, error) {
+	req := args.Query
+	var q filters.FilterCriteria
+	err := Struct2Pb(req, &q)
+	if err != nil {
+		return nil, err
+	}
+	logs, err := ctf.s.FilterAPI.GetLogs(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*protoeth.Log, 0, 0)
+	err = Struct2Pb(logs, &res)
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.FilterLogsResp{
+		Logs: res,
+	}, nil
+}
+
+func (ctf *ContractFilter) SubscribeFilterLogs(ctx context.Context, args *protoeth.SubscribeFilterLogsReq) (*protoeth.SubscribeFilterLogsResp, error) {
+
+	var q filters.FilterCriteria
+	err := Struct2Pb(args, &q)
+	if err != nil {
+		return nil, err
+	}
+	subs, err := ctf.s.FilterAPI.Logs(ctx, q)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*protoeth.Subscription, 0, 0)
+	err = Struct2Pb(subs, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &protoeth.SubscribeFilterLogsResp{
+		Subs: res,
+	}, nil
+}
+
+func Struct2Pb(in interface{}, out interface{}) error {
+	bdata, err := json.Marshal(in)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bdata, out)
+
 }
