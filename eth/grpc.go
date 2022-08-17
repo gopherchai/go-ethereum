@@ -97,6 +97,19 @@ func (s *GrpcService) GetTransactionReceipt(ctx context.Context, req *protoeth.G
 	}, err
 }
 
+func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceReq) (*protoeth.GetBalanceResp, error) {
+	addr := common.HexToAddress(args.Address)
+
+	amount, err := s.BlockChainAPI.GetBalance(ctx, addr, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber))
+	if err != nil {
+		return nil, err
+	}
+
+	return &protoeth.GetBalanceResp{
+		Balance: amount.String(),
+	}, nil
+}
+
 func (s *GrpcService) GetBlockNumber(ctx context.Context, args *protoeth.GetBlockNumberReq) (*protoeth.GetBlockNumberResp, error) {
 	hight := s.BlockChainAPI.BlockNumber()
 	return &protoeth.GetBlockNumberResp{
@@ -123,19 +136,6 @@ func (s *GrpcService) GetBlockNumber(ctx context.Context, args *protoeth.GetBloc
 // 	err = json.Unmarshal(bdata, reply)
 // 	return
 // }
-
-func (s *GrpcService) GetBalance(ctx context.Context, args *protoeth.GetBalanceReq) (*protoeth.GetBalanceResp, error) {
-	addr := common.HexToAddress(args.Address)
-
-	amount, err := s.BlockChainAPI.GetBalance(ctx, addr, rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber))
-	if err != nil {
-		return nil, err
-	}
-
-	return &protoeth.GetBalanceResp{
-		Balance: amount.String(),
-	}, nil
-}
 
 func Serve(stack *node.Node, e *Ethereum, bkd ethapi.Backend) {
 	s := stack.GrpcServer()
@@ -309,6 +309,47 @@ func (s *GrpcService) Call(ctx context.Context, args *protoeth.TransactionReq) (
 	}, err
 }
 
+func (s *GrpcService) CallContract(ctx context.Context, args *protoeth.CallContractReq) (*protoeth.CallContractResp, error) {
+	call := args.Call
+
+	nonce, err := s.TransactionAPI.GetTransactionCount(ctx, common.HexToAddress(call.From), rpc.BlockNumberOrHashWithNumber(rpc.BlockNumber(args.BlockNumber)))
+	if err != nil {
+		return nil, err
+	}
+
+	acls := make([]*protoeth.AccessList, 0, 0)
+	err = Struct2Pb(call.AccessList, &acls)
+	if err != nil {
+		return nil, err
+	}
+	s.Call(ctx, &protoeth.TransactionReq{
+		From:                 call.From,
+		To:                   call.To,
+		Gas:                  call.GasFeeCap,
+		GasPrice:             call.GasPrice,
+		MaxFeePerGas:         "",
+		MaxPriorityFeePerGas: "",
+		Value:                call.GetValue(),
+		Nonce:                nonce.String(),
+		Data:                 string(call.Data),
+		Input:                string(call.Data),
+		ChainId:              "",
+		AccessList:           acls,
+	})
+	return nil, nil
+}
+
+func (s *GrpcService) CodeAt(ctx context.Context, args *protoeth.CodeAtReq) (*protoeth.CodeAtResp, error) {
+	data, err := s.BlockChainAPI.GetCode(ctx, common.HexToAddress(args.Contract), rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber))
+	if err != nil {
+		return nil, err
+	}
+	return &protoeth.CodeAtResp{
+		Data: string(data),
+	}, nil
+
+}
+
 type ContractTransactor struct {
 	s *GrpcService
 }
@@ -326,6 +367,7 @@ func (ct *ContractTransactor) HeaderByNumber(ctx context.Context, args *protoeth
 	}
 	return reply, nil
 }
+
 func (ct *ContractTransactor) PendingCodeAt(ctx context.Context, args *protoeth.PendingCodeAtReq) (*protoeth.PendingCodeAtResp, error) {
 	data, err := ct.s.BlockChainAPI.GetCode(ctx, common.HexToAddress(args.Address), rpc.BlockNumberOrHashWithNumber(-2))
 	if err != nil {
@@ -336,14 +378,14 @@ func (ct *ContractTransactor) PendingCodeAt(ctx context.Context, args *protoeth.
 	}, nil
 }
 
-func (ct *ContractTransactor) PendingNonceAt(ctx context.Context, args *protoeth.PengdingNonceAtReq) (*protoeth.PengdingNonceAtResp, error) {
+func (ct *ContractTransactor) PendingNonceAt(ctx context.Context, args *protoeth.PendingNonceAtReq) (*protoeth.PendingNonceAtResp, error) {
 	//getTransactionCount pending
 	num, err := ct.s.TransactionAPI.GetTransactionCount(ctx, common.HexToAddress(args.Account), rpc.BlockNumberOrHashWithNumber(rpc.PendingBlockNumber))
 	if err != nil {
 		return nil, err
 	}
 
-	return &protoeth.PengdingNonceAtResp{
+	return &protoeth.PendingNonceAtResp{
 		Nonce: hexutil.MustDecodeUint64(num.String()),
 	}, nil
 }
@@ -367,6 +409,7 @@ func (ct *ContractTransactor) SuggestGasTipCap(ctx context.Context, args *protoe
 		Price: num.ToInt().Uint64(),
 	}, nil
 }
+
 func (ct *ContractTransactor) EstimateGas(ctx context.Context, args *protoeth.EstimateGasReq) (*protoeth.EstimateGasResp, error) {
 	msg := args.CallMsg
 	req := ethapi.TransactionArgs{}
@@ -386,7 +429,8 @@ func (ct *ContractTransactor) EstimateGas(ctx context.Context, args *protoeth.Es
 
 func (ct *ContractTransactor) SendRawTransaction(ctx context.Context, args *protoeth.SendRawTransactionReq) (*protoeth.SendRawTransactionResp, error) {
 
-	hash, err := ct.s.TransactionAPI.SendRawTransaction(ctx, hexutil.Bytes(args.Data))
+	hash, err := ct.s.TransactionAPI.SendRawTransaction(ctx,
+		hexutil.Bytes(args.Data))
 	if err != nil {
 		return nil, err
 	}

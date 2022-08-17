@@ -109,7 +109,7 @@ message callMsg {
 
 message callContractReq {
   callMsg call = 1;
-  uint64 blockNumber = 2;
+  int64 blockNumber = 2;
 }
 
 message callContractResp { string data = 1; }
@@ -123,7 +123,7 @@ message pendingCallContractResp { string data = 1; }
 service ContractTransactor {
   rpc HeaderByNumber(headerByNumbeReq) returns (headerResp);
   rpc PendingCodeAt(pendingCodeAtReq) returns (pendingCodeAtResp);
-  rpc PendingNonceAt(pengdingNonceAtReq) returns (pengdingNonceAtResp);
+  rpc PendingNonceAt(pendingNonceAtReq) returns (pendingNonceAtResp);
   rpc SuggestGasPrice(suggestGasPriceReq) returns (suggestGasPriceResp);
   rpc SuggestGasTipCap(suggestGasTipCapReq) returns (suggestGasTipCapResp);
   rpc EstimateGas(estimateGasReq) returns (estimateGasResp);
@@ -152,8 +152,8 @@ message headerResp {
 message pendingCodeAtAccountReq { string account = 1; }
 message pendingNonceAtAccountReq { string account = 1; }
 
-message pengdingNonceAtReq { string account = 1; }
-message pengdingNonceAtResp { uint64 nonce = 1; }
+message pendingNonceAtReq { string account = 1; }
+message pendingNonceAtResp { uint64 nonce = 1; }
 
 message suggestGasPriceReq {}
 message suggestGasPriceResp { uint64 price = 1; }
@@ -189,20 +189,23 @@ message Subscription {
 }
 
 service RpcApi {
-  rpc callContract(callContractReq) returns (callContractResp);
-  rpc codeAt(codeAtReq) returns (codeAtResp);
-  rpc call(transactionReq) returns (callResp);
   rpc getTransactionReceipt(getTransactionReceiptReq)
       returns (getTransactionReceiptResp);
+  rpc getBalance(GetBalanceReq) returns (GetBalanceResp);
+  rpc getBlockNumber(GetBlockNumberReq) returns (GetBlockNumberResp);
+
+  rpc newFilter(NewFilterReq) returns (NewFilterResp);
+  rpc getFilterChanges(GetFilterChangeReq) returns (stream GetFilterChangeResp);
+
   rpc startMining(startMiningReq) returns (startMiningResp);
   rpc stopMining(stopMiningReq) returns (stopMiningResp);
   rpc setEtherbase(setEtherbaseReq) returns (setEtherBaseResp);
   rpc unlockAccount(unlockAccountReq) returns (unlockAccountResp);
-
-  rpc getBalance(GetBalanceReq) returns (GetBalanceResp);
-  rpc getBlockNumber(GetBlockNumberReq) returns (GetBlockNumberResp);
-  rpc newFilter(NewFilterReq) returns (NewFilterResp);
-  rpc getFilterChanges(GetFilterChangeReq) returns (stream GetFilterChangeResp);
   rpc importRawKey(importRawKeyReq) returns (importRawKeyResp);
+
   rpc sendTransaction(transactionReq) returns (transactionResp);
+  rpc call(transactionReq) returns (callResp);
+
+  rpc callContract(callContractReq) returns (callContractResp);
+  rpc codeAt(codeAtReq) returns (codeAtResp);
 }
