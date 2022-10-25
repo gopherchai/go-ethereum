@@ -10,3 +10,6 @@ protoc --go-grpc_out=. --go_out=. ./*.proto
 ```
 
 rm -rf /Users/byc/code/gopherchai/data/go-ethereum/cmd/geth/data/geth
+
+## 其他值得学习的库
+https://github.com/etclabscore/core-geth
